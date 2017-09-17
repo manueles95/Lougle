@@ -11,3 +11,10 @@ Once you are in the directory run the following command `python3 searchEngine.py
 
 * Pyhton 3
 * MySQL server
+
+# Authors
+
+* Manuel Escobar
+* Mauricio Figueroa
+* Mario Vazquez
+* María Ventosa
