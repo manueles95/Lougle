@@ -1,5 +1,4 @@
 import mysql.connector as mySQL
-# import MySQLdb as mySLQ
 from tkinter import *
 from tkinter import simpledialog
 
