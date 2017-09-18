@@ -81,7 +81,7 @@ def query():
 	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
-	c.execute("delete from query;")
+	c.execute("delete from Query;")
 	conn.commit()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
@@ -186,7 +186,7 @@ def parse():
 					copyW = False
 				elif copyW:
 					# print(line + '\n')
-					w += line
+					w += '\n' + line
 				
 				if line.find('.A') != -1 and len(line) <= 2:
 					copyA = True
@@ -208,8 +208,9 @@ def parse():
 			# print("Each document")
 			# print(document)
 
+
 			w = w.lower()
-			w = w.replace("\n", ",")
+			# w = w.replace("\n", " ")
 			w = w.replace(",", " ")
 			w = w.replace("' ", " ")
 			w = w.replace(" '", " ")
