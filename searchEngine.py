@@ -2,8 +2,9 @@ import mysql.connector as mySQL
 from tkinter import *
 from tkinter import simpledialog
 
+# Funcion para vaciar las tablase de la base de datos
 def clearDBRecords():
-	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	conn = mySQL.connect(user='root', password='', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("DELETE FROM InvertedIndex;")
@@ -14,11 +15,12 @@ def clearDBRecords():
 				
 	print ("Data Base cleared")
 
+# Funcion para buscar un termino en la base de datos
 def searchTerm():
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce termino a buscar:")
 
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	conn = mySQL.connect(user='root', password='', database='textSearch')
 	c = conn.cursor()
 
 
@@ -34,9 +36,10 @@ def searchTerm():
 	else :
 		print("Term not found")
 
+# Funcion para buscar un termino en un documento
 def searchInDoc():
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	conn = mySQL.connect(user='root', password='', database='textSearch')
 	c = conn.cursor()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce el id de documento suido por el termino: idDoc,term")
@@ -55,11 +58,12 @@ def searchInDoc():
 	else :
 		print("Term not found")
 
+# Funcion para buscar el DF del termino ingresado
 def searchTermDF():
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce termino a buscar:")
 
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	conn = mySQL.connect(user='root', password='', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("select term, count(*) from InvertedIndex where Term = %s", [textToSearch])
@@ -73,12 +77,13 @@ def searchTermDF():
 	else :
 		print("Term not found")
 
-
+# Funcion procesa la query ingresada por el usuario y regresa los documentos 
+#  ordenados de mayor a menor similitud
 def query():
 
 	qtf = []
 
-	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	conn = mySQL.connect(user='root', password='', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("delete from Query;")
@@ -123,14 +128,16 @@ def query():
 				group by i.IdDoc order by 2 desc;""")
 
 
-	result = c.fetchmany(size=10)
+	#result = c.fetchmany(size=10)
+	result = c.fetchall()
 	print(result)
 
 	count = 0
 
 	textarea.delete(1.0, END)
 	textarea.insert(END, "Doc ID\t\t|Simulitud\n")
-	for rows in c.fetchall() :
+	for rows in result :
+	#for rows in c.fetchall() :
 		print (rows)
 		textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]) + "\n")
 		count = count + 1
@@ -138,24 +145,24 @@ def query():
 			break
 
 	print(count)
-
-
+	#result = c.fetchall()
 	c.execute("delete from query;")
 	conn.commit();
 
-
-
+# Funcion que procesa la coleccion y la guarda en la base de datos
 def parse():
+	# arreglos en los que se almacenaran los valores a guardar
 	my_docs = []
 	my_tf = []
 	doc_counts = []
 	tfs = []
 
 	s=set()
-
-	collection = open('cacm.all', 'r')
+	# sea abre el archivo cacm.all y se guarda en "collection"
+	collection = open('cacmMOD.all', 'r')
 	# print ('valor tfile: ' + str(collection)
 	i = 1
+	# se dividen la coleccion en documentos, cada que hay un .I es un nuevo doc
 	if collection != None:
 		docs = collection.read().split(".I ")
 		# print (docs)
@@ -207,8 +214,7 @@ def parse():
 			my_docs.append(document)
 			# print("Each document")
 			# print(document)
-
-
+			# Se limpia el texto para poder procesar las palabras
 			w = w.lower()
 			# w = w.replace("\n", " ")
 			w = w.replace(",", " ")
@@ -239,10 +245,6 @@ def parse():
 					df = {"docID" : document ["id"], "term": term, "tf": textCount}
 					my_tf.append(df)
 
-
-
-			
-
 			s = s.union(set(tSet))
 			# print("Each set")
 			# print(tSet)
@@ -255,8 +257,8 @@ def parse():
 		# print ('len de my_docs: ' + str(len(my_docs)))
 		# print (len(s))
 	
-		## nos conectamos a la base de datos
-		conn = mySQL.connect(user='root', password='root', database='textSearch')
+		# nos conectamos a la base de datos
+		conn = mySQL.connect(user='root', password='', database='textSearch')
 		c = conn.cursor()
 
 		# se ingresan los valores extraidos del archivo a la base de datos
@@ -274,7 +276,6 @@ def parse():
 			print ("IntegrityError")
 
 	print("Data Base Loaded")
-
 
 # parse()
 
