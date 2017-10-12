@@ -4,7 +4,7 @@ from tkinter import simpledialog
 
 # Funcion para vaciar las tablase de la base de datos
 def clearDBRecords():
-	conn = mySQL.connect(user='root', password='', database='textSearch')
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("DELETE FROM InvertedIndex;")
@@ -20,7 +20,7 @@ def searchTerm():
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce termino a buscar:")
 
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='', database='textSearch')
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 
@@ -39,7 +39,7 @@ def searchTerm():
 # Funcion para buscar un termino en un documento
 def searchInDoc():
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='', database='textSearch')
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce el id de documento suido por el termino: idDoc,term")
@@ -63,7 +63,7 @@ def searchTermDF():
 	textToSearch = simpledialog.askstring("textToSearch", "Intruduce termino a buscar:")
 
 	# connecting to the db.
-	conn = mySQL.connect(user='root', password='', database='textSearch')
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("select term, count(*) from InvertedIndex where Term = %s", [textToSearch])
@@ -83,7 +83,7 @@ def query():
 
 	qtf = []
 
-	conn = mySQL.connect(user='root', password='', database='textSearch')
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("delete from Query;")
@@ -258,7 +258,7 @@ def parse():
 		# print (len(s))
 	
 		# nos conectamos a la base de datos
-		conn = mySQL.connect(user='root', password='', database='textSearch')
+		conn = mySQL.connect(user='root', password='root', database='textSearch')
 		c = conn.cursor()
 
 		# se ingresan los valores extraidos del archivo a la base de datos
