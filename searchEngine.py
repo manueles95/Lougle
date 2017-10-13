@@ -149,6 +149,73 @@ def query():
 	c.execute("delete from query;")
 	conn.commit();
 
+
+def queryDecHi():
+	qtf = []
+
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	c.execute("delete from Query;")
+	conn.commit()
+
+	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
+	textToSearch = str(textToSearch)
+	textToSearch = textToSearch.lower()
+	textToSearch = textToSearch.replace("."," ")
+	textToSearch = textToSearch.replace(","," ")
+	textToSearch = textToSearch.replace("?"," ")
+	textToSearch = textToSearch.replace("!"," ")
+	textToSearch = textToSearch.replace("/"," ")
+	textToSearch = textToSearch.replace("-"," ")
+	textToSearch = textToSearch.replace("_"," ")
+	textToSearch = textToSearch.replace("("," ")
+	textToSearch = textToSearch.replace(")"," ")
+	textToSearch = textToSearch.replace(":"," ")
+	textToSearch = textToSearch.replace(";"," ")	
+	textToSearch = textToSearch.strip()
+
+	query = textToSearch.split()
+
+	tSet = set(query)
+
+	for term in tSet:
+		textCount = query.count(str(term))
+
+		if (textCount > 0):
+			df = {"term": term, "tf": textCount}
+			qtf.append(df)
+
+	for tf in qtf:
+		c.execute("INSERT INTO Query (term, tf) VALUES(%s,%s)", (tf["term"], tf["tf"]))
+		# print(tf)
+
+	conn.commit()
+
+	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
+				from Query q, InvertedIndex i, Terms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdDoc order by 2 desc;""")
+
+	# ?? result = {"idDoc": idDoc, "sim": similitud}
+	result = c.fetchall()
+
+	# se obtienen los tres resultados "relevantes" de todos los obtenidos (primeros 3)
+	resultR = result[0:3]
+
+	# se obtiene el resultado "no relevante" - ultimo de los obtenidos
+	resultS = result[-1]
+	print(resultR)
+	print(resultS)
+
+	c.execute("select terms.term, idf, idDoc from terms, InvertedIndex where idDoc = 3081 and terms.term = InvertedIndex.term order by idf desc;")
+	# fatla no hardcodear el id si no sacarlo de resultR
+	r1 = c.fetchmany(size = 5)
+	print(r1)
+
+
+
+
 # Funcion que procesa la coleccion y la guarda en la base de datos
 def parse():
 	# arreglos en los que se almacenaran los valores a guardar
@@ -312,11 +379,13 @@ parseButt = Button(toolbar, text='Load collection', command=parse)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 parseButt = Button(toolbar, text='Clear collection', command=clearDBRecords)
 parseButt.pack(side=LEFT, padx=2, pady=2)
-printButt = Button(toolbar, text='Search in doc', command=searchInDoc)
-printButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Search Term', command=searchTerm)
-searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Term DF', command=searchTermDF)
+# printButt = Button(toolbar, text='Search in doc', command=searchInDoc)
+# printButt.pack(side=RIGHT, padx=2, pady=2)
+# searchButt = Button(toolbar, text='Search Term', command=searchTerm)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
+# searchButt = Button(toolbar, text='Term DF', command=searchTermDF)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Query', command=query)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
