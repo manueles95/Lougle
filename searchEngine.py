@@ -225,8 +225,10 @@ def queryDecHi():
 	# fatla no hardcodear el id si no sacarlo de resultR
 	# c.execute("select terms.term, idf, idDoc from terms, InvertedIndex where idDoc = %s and terms.term = InvertedIndex.term order by idf desc", (fresult[0]))
 	
+	finalset = []
+
 	# aqui sacamos los 5 terminos mas pesados del primer documento
-	c.execute("""SELECT t.term, idf, idDoc
+	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
 				WHERE t.term = i.term
 				AND idDoc = %s
@@ -239,7 +241,7 @@ def queryDecHi():
 	print(r1)
 
 	# aqui sacamos los 5 terminos mas pesados del segundo documento
-	c.execute("""SELECT t.term, idf, idDoc
+	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
 				WHERE t.term = i.term
 				AND idDoc = %s
@@ -252,7 +254,7 @@ def queryDecHi():
 	print(r2)
 
 	# aqui sacamos los 5 terminos mas pesados del terecer documento
-	c.execute("""SELECT t.term, idf, idDoc
+	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
 				WHERE t.term = i.term
 				AND idDoc = %s
@@ -264,9 +266,8 @@ def queryDecHi():
 	print("----------RESULT 33333------------")
 	print(r3)
 
-
 	# aqui sacamos los 5 terminos mas pesados del documento menos importante en este caso el ultimo
-	c.execute("""SELECT t.term, idf, idDoc
+	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
 				WHERE t.term = i.term
 				AND idDoc = %s
@@ -277,6 +278,62 @@ def queryDecHi():
 	# fresult.append(r1)
 	print("----------RESULT SSSSSSS------------")
 	print(s1)
+
+
+	print("--------------------------------------")
+
+	# ya tengo r1, r2 y r3 para comparar los terminos y recalcular los pasos
+	
+	for t in r1:
+		tp = {"term": t[0], "weight": t[1]}
+		finalset.append(tp)
+	
+	for t in r2:
+		tp = {"term": t[0], "weight": t[1]}
+		finalset.append(tp)
+
+	for t in r3:
+		tp = {"term": t[0], "weight": t[1]}
+		finalset.append(tp)
+
+
+
+	print(finalset)
+
+
+
+	q1 = []
+	for term in finalset:
+		count = 0
+
+		for t in r1:
+			if term["term"] == t[0]:
+				count = count + 1
+
+		for t in r2:
+			if term["term"] == t[0]:
+				count = count + 1
+
+		for t in r3:
+			if term["term"] == t[0]:
+				count = count + 1
+
+		# tp = {"term": term[0], "weight": term[1]*count}
+		# q1.append(tp)
+
+
+	print("/////////////////////////////")
+
+
+	# print(q1)
+
+
+
+
+
+
+
+
 
 
 
