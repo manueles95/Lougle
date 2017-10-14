@@ -154,7 +154,8 @@ def queryDecHi():
 	qtf = []
 
 	conn = mySQL.connect(user='root', password='root', database='textSearch')
-	c = conn.cursor()
+	# c = conn.cursor()
+	c = conn.cursor(buffered=True)
 
 	c.execute("delete from Query;")
 	conn.commit()
@@ -205,13 +206,77 @@ def queryDecHi():
 
 	# se obtiene el resultado "no relevante" - ultimo de los obtenidos
 	resultS = result[-1]
+	print("----------RESULT R-------------")
 	print(resultR)
-	print(resultS)
+	print("----------RESULT S-------------")
+	print(resultS[0])
 
-	c.execute("select terms.term, idf, idDoc from terms, InvertedIndex where idDoc = 3081 and terms.term = InvertedIndex.term order by idf desc;")
+	fresult = []
+
+	# aqui estraemos solo los id de ResultR para no preocuparnos de la similitud
+	for idDoc in resultR:
+		fresult.append(idDoc[0])
+	
+	print("---------------final result--------")
+	print(fresult)
+
+
+	
 	# fatla no hardcodear el id si no sacarlo de resultR
+	# c.execute("select terms.term, idf, idDoc from terms, InvertedIndex where idDoc = %s and terms.term = InvertedIndex.term order by idf desc", (fresult[0]))
+	
+	# aqui sacamos los 5 terminos mas pesados del primer documento
+	c.execute("""SELECT t.term, idf, idDoc
+				FROM terms t, InvertedIndex i
+				WHERE t.term = i.term
+				AND idDoc = %s
+				ORDER BY idf desc """, [fresult[0]])
+	
+	# esos 5 terminos se guradan en en arreglo r1
 	r1 = c.fetchmany(size = 5)
+	# fresult.append(r1)
+	print("----------RESULT R11111------------")
 	print(r1)
+
+	# aqui sacamos los 5 terminos mas pesados del segundo documento
+	c.execute("""SELECT t.term, idf, idDoc
+				FROM terms t, InvertedIndex i
+				WHERE t.term = i.term
+				AND idDoc = %s
+				ORDER BY idf desc """, [fresult[1]])
+	
+	# esos 5 terminos se guradan en en arreglo r2
+	r2 = c.fetchmany(size = 5)
+	# fresult.append(r1)
+	print("----------RESULT 222222------------")
+	print(r2)
+
+	# aqui sacamos los 5 terminos mas pesados del terecer documento
+	c.execute("""SELECT t.term, idf, idDoc
+				FROM terms t, InvertedIndex i
+				WHERE t.term = i.term
+				AND idDoc = %s
+				ORDER BY idf desc """, [fresult[2]])
+		
+	# esos 5 terminos se guradan en en arreglo r3
+	r3 = c.fetchmany(size = 5)
+	# fresult.append(r1)
+	print("----------RESULT 33333------------")
+	print(r3)
+
+
+	# aqui sacamos los 5 terminos mas pesados del documento menos importante en este caso el ultimo
+	c.execute("""SELECT t.term, idf, idDoc
+				FROM terms t, InvertedIndex i
+				WHERE t.term = i.term
+				AND idDoc = %s
+				ORDER BY idf desc """, [resultS[0]])
+	
+	# los terminos se guardan en s1
+	s1 = c.fetchmany(size = 5)
+	# fresult.append(r1)
+	print("----------RESULT SSSSSSS------------")
+	print(s1)
 
 
 
