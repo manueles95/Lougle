@@ -296,15 +296,21 @@ def queryDecHi():
 		tp = {"term": t[0], "weight": t[1]}
 		finalset.append(tp)
 
-
-
-	print(finalset)
-
+	for t in qtf:
+			c.execute("select idf from terms where term = %s", [t["term"]])
+			weight = c.fetchone()
+			tpq = {"term": t["term"], "weight": weight[0]}
+			finalset.append(tpq)
 
 
 	q1 = []
 	for term in finalset:
 		count = 0
+
+		
+		for t in qtf:
+			if term["term"] == t["term"]:
+				count = count + 1
 
 		for t in r1:
 			if term["term"] == t[0]:
@@ -318,20 +324,17 @@ def queryDecHi():
 			if term["term"] == t[0]:
 				count = count + 1
 
-		# tp = {"term": term[0], "weight": term[1]*count}
-		# q1.append(tp)
+		for t in s1:
+			if term["term"] == t[0]:
+				count = count - 1
+
+
+		tp = {"term": term["term"], "weight": term["weight"]*count}
+		q1.append(tp)
 
 
 	print("/////////////////////////////")
-
-
-	# print(q1)
-
-
-
-
-
-
+	print(q1)
 
 
 
