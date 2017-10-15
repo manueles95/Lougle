@@ -158,6 +158,8 @@ def queryDecHi():
 	c = conn.cursor(buffered=True)
 
 	c.execute("delete from Query;")
+	c.execute("delete from query1;")
+	c.execute("delete from temporalTerms")
 	conn.commit()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
@@ -303,6 +305,7 @@ def queryDecHi():
 			finalset.append(tpq)
 
 
+	temporalTerms = []
 	q1 = []
 	for term in finalset:
 		count = 0
@@ -330,15 +333,51 @@ def queryDecHi():
 
 
 		tp = {"term": term["term"], "weight": term["weight"]*count}
-		q1.append(tp)
+		temporalTerms.append(tp)
 
+		queryTuple = {"term": term["term"], "tf": count}
+		q1.append(queryTuple)
 
+	print("/////////////////////////////")
+	print(temporalTerms)
 	print("/////////////////////////////")
 	print(q1)
 
+	for term in temporalTerms:
+		c.execute("INSERT INTO TemporalTerms (term, idf) VALUES(%s,%s)", [term["term"], term["weight"]])
+
+	for term in q1:
+		c.execute("INSERT INTO Query1 (term, tf) VALUES(%s,%s)", [term["term"], term["tf"]])
+
+	conn.commit()
+
+	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
+				from Query1 q, InvertedIndex i, TemporalTerms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdDoc order by 2 desc;""")
 
 
+	#result = c.fetchmany(size=10)
+	result = c.fetchall()
+	print(result)
 
+	count = 0
+
+	textarea.delete(1.0, END)
+	textarea.insert(END, "Doc ID\t\t|Simulitud\n")
+	for rows in result :
+	#for rows in c.fetchall() :
+		print (rows)
+		textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]) + "\n")
+		count = count + 1
+		if (count > 9) :
+			break
+
+	print(count)
+	#result = c.fetchall()
+	c.execute("delete from query1;")
+	c.execute("delete from temporalTerms")
+	conn.commit();
 
 
 # Funcion que procesa la coleccion y la guarda en la base de datos
