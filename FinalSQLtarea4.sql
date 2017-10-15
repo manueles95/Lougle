@@ -12,6 +12,8 @@ CREATE TABLE InvertedIndex (idInverted INT NOT NULL AUTO_INCREMENT, IdDoc INT NO
 
 CREATE TABLE Query (term VARCHAR(122) NOT NULL, tf INT NOT NULL, PRIMARY KEY (term));
 
+CREATE TABLE Query1 (term VARCHAR(122) NOT NULL, tf INT NOT NULL, PRIMARY KEY (term));
+
 insert into Query values ("LISP", 1);
 
 insert into Terms (select Term, log10(3/count(*)) from InvertedIndex group by Term);
