@@ -195,7 +195,7 @@ def queryDecHi():
 
 	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
 				from Query q, InvertedIndex i, Terms t 
-				where q.term = t.term AND i.term = t.term 
+				where q.term = t.Term AND i.term = t.Term 
 				group by i.IdDoc order by 2 desc;""")
 
 	# ?? result = {"idDoc": idDoc, "sim": similitud}
