@@ -408,7 +408,7 @@ def parse():
 					copyT = False
 				elif copyT:
 					# print(line + '\n')
-					t = line
+					t += '\n' + line
 
 				if line.find('.W') != -1 and len(line) <= 2:
 					copyW = True
@@ -424,7 +424,7 @@ def parse():
 					copyA = False
 				elif copyA:
 					# print(line + '\n')
-					a = line
+					a += '\n' + line
 
 			# print(t)
 			# print(w)
