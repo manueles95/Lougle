@@ -118,7 +118,6 @@ def query():
 
 	for tf in qtf:
 		c.execute("INSERT INTO Query (term, tf) VALUES(%s,%s)", (tf["term"], tf["tf"]))
-		print(tf)
 
 	conn.commit()
 
@@ -130,24 +129,41 @@ def query():
 
 	#result = c.fetchmany(size=10)
 	result = c.fetchall()
-	print(result)
 
-	count = 0
+	documents = []
+	for docs in result:
 
+		c.execute("select titulo from docs where idDoc = %s", [docs[0]])
+		doc = c.fetchall()
+		documents.append(doc)
+	
 	textarea.delete(1.0, END)
-	textarea.insert(END, "Doc ID\t\t|Simulitud\n")
-	for rows in result :
-	#for rows in c.fetchall() :
-		print (rows)
-		textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]) + "\n")
+	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
+	count = 0
+	for rows in documents :
+		textarea.insert(END,str(rows[0]) + "\n")
 		count = count + 1
 		if (count > 9) :
 			break
 
-	print(count)
-	#result = c.fetchall()
 	c.execute("delete from query;")
-	conn.commit();
+	conn.commit()
+
+	print("Query Done")
+
+	# asi es como se imprimia antes, unicamente el id de los docuemtnos con su similitud
+	# count = 0
+	# textarea.delete(1.0, END)
+	# textarea.insert(END, "Doc ID\t\t|Simulitud\n")
+	# for rows in result :
+	# #for rows in c.fetchall() :
+
+	# 	textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]) + "\n")
+	# 	count = count + 1
+	# 	if (count > 9) :
+	# 		break
+
+	
 
 
 def queryDecHi():
@@ -158,6 +174,8 @@ def queryDecHi():
 	c = conn.cursor(buffered=True)
 
 	c.execute("delete from Query;")
+	c.execute("delete from query1;")
+	c.execute("delete from temporalTerms")
 	conn.commit()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
@@ -206,26 +224,13 @@ def queryDecHi():
 
 	# se obtiene el resultado "no relevante" - ultimo de los obtenidos
 	resultS = result[-1]
-	print("----------RESULT R-------------")
-	print(resultR)
-	print("----------RESULT S-------------")
-	print(resultS[0])
 
-	fresult = []
+	# necesario para generar los selects de los terminos con el sql de abajo
+	fresult = [] 
 
-	# aqui estraemos solo los id de ResultR para no preocuparnos de la similitud
+	# aqui extraemos solo los id de ResultR para no preocuparnos de la similitud
 	for idDoc in resultR:
 		fresult.append(idDoc[0])
-	
-	print("---------------final result--------")
-	print(fresult)
-
-
-	
-	# fatla no hardcodear el id si no sacarlo de resultR
-	# c.execute("select terms.term, idf, idDoc from terms, InvertedIndex where idDoc = %s and terms.term = InvertedIndex.term order by idf desc", (fresult[0]))
-	
-	finalset = []
 
 	# aqui sacamos los 5 terminos mas pesados del primer documento
 	c.execute("""SELECT t.term, idf
@@ -236,10 +241,6 @@ def queryDecHi():
 	
 	# esos 5 terminos se guradan en en arreglo r1
 	r1 = c.fetchmany(size = 5)
-	# fresult.append(r1)
-	print("----------RESULT R11111------------")
-	print(r1)
-
 	# aqui sacamos los 5 terminos mas pesados del segundo documento
 	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
@@ -249,10 +250,6 @@ def queryDecHi():
 	
 	# esos 5 terminos se guradan en en arreglo r2
 	r2 = c.fetchmany(size = 5)
-	# fresult.append(r1)
-	print("----------RESULT 222222------------")
-	print(r2)
-
 	# aqui sacamos los 5 terminos mas pesados del terecer documento
 	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
@@ -262,10 +259,6 @@ def queryDecHi():
 		
 	# esos 5 terminos se guradan en en arreglo r3
 	r3 = c.fetchmany(size = 5)
-	# fresult.append(r1)
-	print("----------RESULT 33333------------")
-	print(r3)
-
 	# aqui sacamos los 5 terminos mas pesados del documento menos importante en este caso el ultimo
 	c.execute("""SELECT t.term, idf
 				FROM terms t, InvertedIndex i
@@ -275,15 +268,11 @@ def queryDecHi():
 	
 	# los terminos se guardan en s1
 	s1 = c.fetchmany(size = 5)
-	# fresult.append(r1)
-	print("----------RESULT SSSSSSS------------")
-	print(s1)
-
-
-	print("--------------------------------------")
-
 	# ya tengo r1, r2 y r3 para comparar los terminos y recalcular los pasos
 	
+	#aqui se guardan todos los terminos con sus pesos para hacer la tabla TemporalTerms
+	finalset = []
+	# los siguientes for construyen las tuplas para agregarselas a final step, con el cual se egeneraran la nuevas tablas temporales
 	for t in r1:
 		tp = {"term": t[0], "weight": t[1]}
 		finalset.append(tp)
@@ -296,18 +285,25 @@ def queryDecHi():
 		tp = {"term": t[0], "weight": t[1]}
 		finalset.append(tp)
 
+	# como la query no contiene los pesos de los terminos es necesario utilizar sql para extrar esos terminos de otra tabal diferente
 	for t in qtf:
 			c.execute("select idf from terms where term = %s", [t["term"]])
 			weight = c.fetchone()
-			tpq = {"term": t["term"], "weight": weight[0]}
-			finalset.append(tpq)
+			if weight != None:
+				tpq = {"term": t["term"], "weight": weight[0]}
+				finalset.append(tpq)
+			else:
+				tpq = {"term": t["term"], "weight": 1}
+				finalset.append(tpq)
 
 
-	q1 = []
+
+	temporalTerms = [] # este arreglo se usara para guardar los terminos que se agregaran a la tabla TemporaTerms
+	q1 = [] # arreglo para guardar los terminos que iran en la tabla query1
+	
 	for term in finalset:
 		count = 0
 
-		
 		for t in qtf:
 			if term["term"] == t["term"]:
 				count = count + 1
@@ -328,17 +324,52 @@ def queryDecHi():
 			if term["term"] == t[0]:
 				count = count - 1
 
+		tp = {"term": term["term"], "weight": term["weight"]*count} #agregamso los terminos y sus pesos dependeiendo de cuantas veces se obtenga un termino en los nuevos terminos
+		temporalTerms.append(tp)
 
-		tp = {"term": term["term"], "weight": term["weight"]*count}
-		q1.append(tp)
+		queryTuple = {"term": term["term"], "tf": count} # poblamos la tabla query1 con el termino y su frecuencia de termino
+		q1.append(queryTuple)
+
+	for term in temporalTerms: #se pobla la tabla temporal terms
+		c.execute("INSERT INTO TemporalTerms (term, idf) VALUES(%s,%s)", [term["term"], term["weight"]])
+
+	for term in q1: #se pobla la tabla query1
+		c.execute("INSERT INTO Query1 (term, tf) VALUES(%s,%s)", [term["term"], term["tf"]])
+
+	conn.commit()
+
+	# comando sql para obtener la similitud entre la consulta y los documentos
+	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
+				from Query1 q, InvertedIndex i, TemporalTerms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdDoc order by 2 desc;""")
 
 
-	print("/////////////////////////////")
-	print(q1)
+	result = c.fetchmany(size=10)
+
+	# una vez con los id de la consulta de similitud se usa un select para extraer los documentos de la tabla docs con los ids que queremos
+	documents = []
+	for docs in result:
+
+		c.execute("select titulo from docs where idDoc = %s", [docs[0]])
+		doc = c.fetchall()
+		documents.append(doc)
+	
+	textarea.delete(1.0, END)
+	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
+	count = 0
+	for rows in documents :
+		textarea.insert(END,str(rows[0]) + "\n")
+		count = count + 1
+		if (count > 9) :
+			break
 
 
+	c.execute("delete from query1;")
+	c.execute("delete from temporalTerms")
+	conn.commit();
 
-
+	print("Query Done")
 
 
 # Funcion que procesa la coleccion y la guarda en la base de datos
