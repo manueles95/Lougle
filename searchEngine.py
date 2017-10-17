@@ -354,7 +354,7 @@ def queryDecHi():
 		c.execute("select titulo from docs where idDoc = %s", [docs[0]])
 		doc = c.fetchall()
 		documents.append(doc)
-	
+	print(result) #para obtener los ids del documento y medir efectividad
 	textarea.delete(1.0, END)
 	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
 	count = 0
