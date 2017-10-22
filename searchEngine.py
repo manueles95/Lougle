@@ -133,7 +133,7 @@ def query():
 	documents = []
 	for docs in result:
 
-		c.execute("select titulo from docs where idDoc = %s", [docs[0]])
+		c.execute("select titulo from Docs where idDoc = %s", [docs[0]])
 		doc = c.fetchall()
 		documents.append(doc)
 	
@@ -146,7 +146,7 @@ def query():
 		if (count > 9) :
 			break
 
-	c.execute("delete from query;")
+	c.execute("delete from Query;")
 	conn.commit()
 
 	print("Query Done")
@@ -174,8 +174,8 @@ def queryDecHi():
 	c = conn.cursor(buffered=True)
 
 	c.execute("delete from Query;")
-	c.execute("delete from query1;")
-	c.execute("delete from temporalTerms")
+	c.execute("delete from Query1;")
+	c.execute("delete from TemporalTerms")
 	conn.commit()
 
 	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
@@ -345,13 +345,17 @@ def queryDecHi():
 				group by i.IdDoc order by 2 desc;""")
 
 
-	result = c.fetchmany(size=10)
+	# result = c.fetchmany(size=10)
+	result = c.fetchall()
+
+	for r in result:
+		print(r)
 
 	# una vez con los id de la consulta de similitud se usa un select para extraer los documentos de la tabla docs con los ids que queremos
 	documents = []
 	for docs in result:
 
-		c.execute("select titulo from docs where idDoc = %s", [docs[0]])
+		c.execute("select titulo from Docs where idDoc = %s", [docs[0]])
 		doc = c.fetchall()
 		documents.append(doc)
 	
@@ -365,8 +369,8 @@ def queryDecHi():
 			break
 
 
-	c.execute("delete from query1;")
-	c.execute("delete from temporalTerms")
+	c.execute("delete from Query1;")
+	c.execute("delete from TemporalTerms")
 	conn.commit();
 
 	print("Query Done")
@@ -382,7 +386,7 @@ def parse():
 
 	s=set()
 	# sea abre el archivo cacm.all y se guarda en "collection"
-	collection = open('cacmMOD.all', 'r')
+	collection = open('cacm.all', 'r')
 	# print ('valor tfile: ' + str(collection)
 	i = 1
 	# se dividen la coleccion en documentos, cada que hay un .I es un nuevo doc
@@ -468,9 +472,42 @@ def parse():
 					df = {"docID" : document ["id"], "term": term, "tf": textCount}
 					my_tf.append(df)
 
+			
+			a = a.lower()
+			# a = a.replace("\n", " ")
+			a = a.replace(",", " ")
+			# a = a.replace("' ", " ")
+			# a = a.replace(" '", " ")
+			# a = a.replace("-", " ")
+			a = a.replace(".", " ")
+			a = a.replace(";", " ")
+			a = a.replace(":", " ")
+			a = a.replace("(", " ")
+			a = a.replace(")", " ")
+			a = a.replace("?", " ")
+			a = a.replace("/", " ")
+			a = a.replace("\"", " ")
+			a = a.replace("["," ")
+			a = a.replace("]"," ")
+			a = a.replace("{"," ")
+			a = a.replace("}"," ")
+
+			aSet = set(a.split())
+			for term in aSet:
+				term = term.strip("'")
+				term = term.strip()
+
+				textCount = w.count(str(term))
+
+				if (textCount > 0):
+					df = {"docID" : document ["id"], "term": term, "tf": textCount}
+					my_tf.append(df)
+
 			s = s.union(set(tSet))
-			# print("Each set")
-			# print(tSet)
+			s = s.union(set(aSet))
+			print("Each set")
+			print(tSet)
+			print(aSet)
 	# collection.close()
 
 		s = sorted(s)

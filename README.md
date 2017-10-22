@@ -12,6 +12,15 @@ Once you are in the directory run the following command `python3 searchEngine.py
 * Pyhton 3
 * MySQL server
 
+Glosario
+.I - Id
+.T - Titulo
+.W - Abstract
+.B - Fecha de publicacion
+.A - Autor
+.N - Date of the Entry
+.X - Reference Information
+
 # Authors
 
 * Manuel Escobar
