@@ -502,13 +502,66 @@ def parse():
 				if (textCount > 0):
 					df = {"docID" : document ["id"], "term": term, "tf": textCount}
 					my_tf.append(df)
-
 			s = s.union(set(tSet))
 			s = s.union(set(aSet))
 			print("Each set")
 			print(tSet)
 			print(aSet)
 	# collection.close()
+
+	tfile = open('LISA0.001', 'r')
+	if tfile != None:
+		## Del archivo extrae idDoc, text y terms
+		docs = tfile.read().split("********************************************")
+		del docs[-1] #borra el ultimo elemento vacio de la lista
+		# print ('valor docs: ' + str(docs))
+		# print ('len docs: ' + str(len(docs)))
+
+		print 'parsing files...'
+		for doc in docs:
+			text = ''
+			lines = doc.splitlines()
+			# print ('parsing file..' + doc)
+
+			for line in lines:
+				if line.find("Document") != -1:
+					docid = line.split()[1]
+				else:
+					text += line+'\n'
+				# print ('parsing file...' + docid + text)
+
+			document = { "id":docid, "text":text }
+			my_docs.append(document)
+			# print ('len de my_docs: ' + str(len(my_docs)))
+			
+			text = text.lower()
+			# text = text.replace("\n", " ")
+			text = text.replace(",", " ")
+			text = text.replace("' ", " ")
+			text = text.replace(" '", " ")
+			text = text.replace("-", " ")
+			text = text.replace(".", " ")
+			text = text.replace(";", " ")
+			text = text.replace(":", " ")
+			text = text.replace("(", " ")
+			text = text.replace(")", " ")
+			text = text.replace("?", " ")
+			text = text.replace("/", " ")
+			text = text.replace("\"", " ")
+			text = text.replace("["," ")
+			text = text.replace("]"," ")
+			text = text.replace("{"," ")
+			text = text.replace("}"," ")
+			t = set(text.split())
+			for term in t:
+				term = term.strip("'")
+				term = term.strip()
+				textCount = w.count(str(term))
+				
+				if (textCount > 0):
+					df = {"docID" : document ["id"], "term": term, "tf": textCount}
+					my_tf.append(df)
+			s = s.union(set(t))
 
 		s = sorted(s)
 		# print("my_tf")
