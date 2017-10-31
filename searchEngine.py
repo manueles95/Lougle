@@ -1,6 +1,11 @@
 import mysql.connector as mySQL
 from tkinter import *
 from tkinter import simpledialog
+import re
+
+def temporal():
+	clearDBRecords()
+	parse()
 
 # Funcion para vaciar las tablase de la base de datos
 def clearDBRecords():
@@ -9,11 +14,13 @@ def clearDBRecords():
 
 	c.execute("DELETE FROM InvertedIndex;")
 	c.execute("DELETE FROM Terms;")
-	c.execute("DELETE FROM Docs;")	
+	c.execute("DELETE FROM Docs;")
+	c.execute("DELETE FROM Cluster;")
+	# c.execute("DELETE FROM Document;")	
 
 	conn.commit()			
 				
-	print ("Data Base cleared")
+	print ("Data Base Cleared")
 
 # Funcion para buscar un termino en la base de datos
 def searchTerm():
@@ -34,7 +41,7 @@ def searchTerm():
 			print (rows)
 			textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]))
 	else :
-		print("Term not found")
+		print("Term Not Found")
 
 # Funcion para buscar un termino en un documento
 def searchInDoc():
@@ -76,6 +83,267 @@ def searchTermDF():
 			textarea.insert(END, str(rows[0]) + "\t\t|" +str(rows[1]))
 	else :
 		print("Term not found")
+
+
+# Funcion para hacer clustering de los documentos
+def cluster():
+	
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	c.execute("DELETE FROM Cluster;")
+	conn.commit()	
+
+	c.execute("select * from docs")
+
+	# esta n se va a usar cuando necesitemos que la coleccion lea un numero no determinado de documentos
+	documents = c.fetchall()
+	n = len(documents)
+	# print(n)
+
+	matrix = [[0 for x in range(n)]for y in range(n)]
+
+	# construimos la matriz de similitud
+	# aqui cambiamos el 3 por n para hacerlo del tamano que sea
+	for i in range(0, n):
+		for j in range(0,n):
+			c.execute("""select sum(i.tf * t.idf * j.tf * t.idf)
+			from InvertedIndex i, InvertedIndex j, Terms t 
+			where i.term = t.term AND j.term = t.term AND i.IdDoc = %s AND j.IdDoc = %s""", (i +1, j +1))
+
+			similarity = c.fetchone()
+			# print(int(similarity[0]))
+			matrix[i][j] = similarity[0]
+			# print(matrix[i][j])
+		#end for
+	#end for
+
+	# Se crean los cluster iniciales con lo que se manipularan las cosas
+	# Tambien se agregan los documentos iniciales a sus clusters
+	for i in range(0,n):
+		j= i+1 #para poder tener el id correcto le sumamos un 1 a la variable j
+		clustername = "clusterNumero" + str(j)
+		# print(clustername)
+		c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (j, clustername))
+
+		c.execute("""UPDATE Docs
+						SET clusterid = %s
+						where idDoc = %s;""", (j,j))
+	#End for
+	conn.commit()
+	
+	# Primero voy a crear el cluster combinado inicial
+	continuar = True
+	iteration = 0
+	while continuar == True:
+		maxSim = 0
+		for i in range(0, n):
+			for j in range(0,n):
+				if i != j:
+					tempSim = matrix[i][j]
+					# print(matrix[i][j])
+
+					if tempSim > maxSim:
+						maxSim = tempSim
+						doc1 = i + 1
+						doc2 = j + 1
+
+		# eliminamos la similitud correspondiente a esos dos lugare ya que no se podran evaluar consigo mismos ya
+		
+		# print("******************")
+		# print(doc1)
+		# print(doc2)
+		matrix[doc1 - 1][doc2 - 1] = 0
+		matrix[doc2 - 1][doc1 - 1] = 0
+		
+		# primero sacamos el cluster mas alto del primer doc de la matriz
+			
+		c.execute("select clusterid from docs where idDoc = %s", [doc1])
+		paso1 = int(c.fetchone()[0])
+		# print(paso1)
+
+
+		root = False
+		while root == False:
+
+			c.execute("select pid from cluster where clusterid = %s", [paso1])
+			paso2 = c.fetchone()
+			paso2if = str(paso2)
+
+			if paso2if != "(None,)":
+				# print("ahi vamos")
+				paso2 = int(paso2[0])
+
+				paso1 = paso2
+
+				
+			elif paso2if == "(None,)":
+				root = True
+				# print("ya llegamos al root")
+				clustermerge1 = paso1
+
+
+
+		# luego hacemos lo mismo para el segundo documento para agregarlo al cluster
+
+		c.execute("select clusterid from docs where idDoc = %s", [doc2])
+		step1 = int(c.fetchone()[0])
+		# print(step1)
+
+
+		root = False
+		while root == False:
+
+			c.execute("select pid from cluster where clusterid = %s", [step1])
+			step2 = c.fetchone()
+			step2if = str(step2)
+
+			if step2if != "(None,)":
+				# print("ahi vamos x2")
+				step2 = int(step2[0])
+
+				step1 = step2
+
+				
+			elif step2if == "(None,)":
+				root = True
+				# print("ya llegamos al root")
+				clustermerge2 = step1
+
+
+
+
+		if str(clustermerge1) != str(clustermerge2):
+			print("////////////////################")
+			print(clustermerge1)
+			print(clustermerge2)
+
+			c.execute("select clusterid from cluster")
+			numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
+			clustername = "clusterNumero" + str(numeroDeCluster)
+			# print(numeroDeClusters)
+
+			c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
+
+			c.execute("""UPDATE cluster
+							SET pid = %s 
+							WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, clustermerge1, clustermerge2))
+
+			conn.commit()
+
+
+
+
+		# print(paso2)
+		c.execute("select count(*) from cluster where pid IS NULL")
+		stopNow = int(c.fetchone()[0])
+		if stopNow == 1:
+			continuar = False
+
+
+	print("Clustering Done")
+	# por ultimo juntamos los dos clusters restantes
+	# c.execute("select clusterid")
+
+		# c.execute("select clusterid from cluster")
+		# numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
+		# clustername = "clusterNumero" + str(numeroDeCluster)
+		# # print(numeroDeClusters)
+
+		# c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
+
+		# c.execute("""UPDATE cluster
+		# 				SET pid = %s 
+		# 				WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, doc1, doc2))
+
+		# conn.commit()
+
+
+		# print("[ " + str(doc1) + " ] [ " + str(doc2) + " ]")
+
+		# print(maxSim)
+		# print(doc1)
+		# print(doc2)
+
+
+
+	# # aqui empiezo a iterar en el arbol creo que lo tengo que hacer en un while
+
+
+	# c.execute("""select clusterid
+	# 				from cluster
+	# 				where pid IS NULL """)
+
+	# result = c.fetchall()
+	# i = 0
+	# j = 0
+	# for cluster in result:
+
+	# 	papi = int(cluster[0])
+	# 	print("papi" + str(int(cluster[0])))
+
+	# 	c.execute("select count(*) from cluster where pid = %s", [papi])
+	# 	resultado = c.fetchone()
+
+	# 	if resultado[0] == 0:
+	# 		node = int(cluster[0])
+	# 		c.execute("""select idDoc
+	# 						from docs 
+	# 						where clusterid = %s""", [node])
+
+	# 		leaf = c.fetchone()
+		
+	# 	elif resultado[0] == 1:
+
+
+	# 		# print(leaf[0])
+
+	# 	print(resultado[0])
+
+
+	# getHighiestSimilarity(matrix)
+
+	# guardando codigo por si la cago
+	# # Primero voy a crear el cluster combinado inicial
+	# maxSim = 0
+	# for i in range(0, n):
+	# 	for j in range(0,n):
+	# 		if i != j:
+	# 			tempSim = matrix[i][j]
+	# 			# print(matrix[i][j])
+
+	# 			if tempSim > maxSim:
+	# 				maxSim = tempSim
+	# 				doc1 = i + 1
+	# 				doc2 = j + 1
+
+	# # print(maxSim)
+	# # print(doc1)
+	# # print(doc2)
+
+	# c.execute("select clusterid from cluster")
+	# numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
+	# clustername = "clusterNumero" + str(numeroDeCluster)
+	# # print(numeroDeClusters)
+
+	# c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
+
+	# c.execute("""UPDATE cluster
+	# 				SET pid = %s 
+	# 				WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, doc1, doc2))
+
+	# conn.commit()
+
+
+
+def getHighiestSimilarity(matrix):
+	
+	for m in matrix:
+		print(m)
+
+	# while numero de clusetrs > 2;
+
+
 
 # Funcion procesa la query ingresada por el usuario y regresa los documentos 
 #  ordenados de mayor a menor similitud
@@ -383,10 +651,16 @@ def parse():
 	my_tf = []
 	doc_counts = []
 	tfs = []
+	
 
 	s=set()
+	
+
+	# ------------------------------------------------------------------------>>>>>>>>>>>>>> puedes comentar de aqui para abajo
+
+
 	# sea abre el archivo cacm.all y se guarda en "collection"
-	collection = open('cacm.all', 'r')
+	collection = open('cacmmod5.all', 'r')
 	# print ('valor tfile: ' + str(collection)
 	i = 1
 	# se dividen la coleccion en documentos, cada que hay un .I es un nuevo doc
@@ -504,12 +778,16 @@ def parse():
 					my_tf.append(df)
 			s = s.union(set(tSet))
 			s = s.union(set(aSet))
-			print("Each set")
-			print(tSet)
-			print(aSet)
+			# print("Each set")
+			# print(tSet)
+			# print(aSet)
 	# collection.close()
+	# Para corregir los id de los documentos y no tener errores de integridad utilizamos idcorrection para sumar los id's ya cargados a la tabla y continuar desde ese numero
+	idCorrection = len(docs)
 
-	tfile = open('LISA0.001', 'r')
+	# # #--------------------------------------------------------------------------------------->>>>>>>>puedes comentar de aqui para arriba
+
+	tfile = open('LISAmod5.001', 'r')
 	if tfile != None:
 		## Del archivo extrae idDoc, text y terms
 		docs = tfile.read().split("********************************************")
@@ -517,25 +795,32 @@ def parse():
 		# print ('valor docs: ' + str(docs))
 		# print ('len docs: ' + str(len(docs)))
 
-		print 'parsing files...'
-		for doc in docs:
+
+		for doc in docs:			
 			text = ''
-			lines = doc.splitlines()
+			title = ''
+			lines = doc.split("\n\n")
+			# title = doc.split("\n\n")
 			# print ('parsing file..' + doc)
+
+
 
 			for line in lines:
 				if line.find("Document") != -1:
-					docid = line.split()[1]
+					temp = int(line.split()[1]) + idCorrection
+					docid = str(temp)
+					title = line.split("\n")[2]
+					# print(title)
 				else:
 					text += line+'\n'
-				# print ('parsing file...' + docid + text)
 
-			document = { "id":docid, "text":text }
+			document = { "id":docid, "titulo":title, "texto":text, "autor":''}
+			# print(document)
 			my_docs.append(document)
 			# print ('len de my_docs: ' + str(len(my_docs)))
 			
 			text = text.lower()
-			# text = text.replace("\n", " ")
+			text = text.replace("\n", " ")
 			text = text.replace(",", " ")
 			text = text.replace("' ", " ")
 			text = text.replace(" '", " ")
@@ -556,19 +841,158 @@ def parse():
 			for term in t:
 				term = term.strip("'")
 				term = term.strip()
-				textCount = w.count(str(term))
+				textCount = text.count(str(term))
 				
 				if (textCount > 0):
 					df = {"docID" : document ["id"], "term": term, "tf": textCount}
 					my_tf.append(df)
 			s = s.union(set(t))
 
-		s = sorted(s)
+
+
+		# s = sorted(s)
 		# print("my_tf")
-		# print(my_tf)
+		# print(my_tf[0])
+		# print(my_docs[0])
+		# print(lines)
 		# print(s)
 		# print ('len de my_docs: ' + str(len(my_docs)))
 		# print (len(s))
+
+		# for tf in my_tf:
+		# 	print(tf)
+
+		#----------------------------------------------------------------------------->>>>>>>>puedes comentar de aqui para arriba X2
+
+
+	collection = open('CISImod5.all', 'r')
+	idCorrection = idCorrection *2
+	# print ('valor tfile: ' + str(collection)
+	i = 1
+	# se dividen la coleccion en documentos, cada que hay un .I es un nuevo doc
+	if collection != None:
+		docs = collection.read().split(".I ")
+		# print (docs)
+		del docs[0]
+
+		for doc in docs:
+			# print(doc)
+			t = ''
+			w = ''
+			a = ''
+			copyT = False
+			copyW = False
+			copyA = False
+			# copy = False
+			lines = doc.splitlines()
+			for line in lines:
+				if line.find('.T') != -1 and len(line) <= 2:
+					copyT = True
+				elif line.find('.A') != -1 and len(line) <= 2 or line.find('.B') != -1 and len(line) <= 2:
+					copyT = False
+				elif copyT:
+					# print(line + '\n')
+					t = line
+
+				if line.find('.W') != -1 and len(line) <= 2:
+					copyW = True
+				elif line.find('.X') != -1 and len(line) <= 2:
+					copyW = False
+				elif copyW:
+					# print(line + '\n')
+					w += '\n' + line
+				
+				if line.find('.A') != -1 and len(line) <= 2:
+					copyA = True
+				elif line.find('.W') != -1 and len(line) <= 2:
+					copyA = False
+				elif copyA:
+					# print(line + '\n')
+					a = line
+
+			# print(t)
+			# print(w)
+			# print(a)
+			# # print(len(lines))
+			# print('\n')
+
+			document = {"id":i + idCorrection, "titulo":t,"texto":w,"autor":a}
+			i+=1
+			my_docs.append(document)
+			# print("Each document")
+			# print(document)
+			# Se limpia el texto para poder procesar las palabras
+			w = w.lower()
+			# w = w.replace("\n", " ")
+			w = w.replace(",", " ")
+			w = w.replace("' ", " ")
+			w = w.replace(" '", " ")
+			w = w.replace("-", " ")
+			w = w.replace(".", " ")
+			w = w.replace(";", " ")
+			w = w.replace(":", " ")
+			w = w.replace("(", " ")
+			w = w.replace(")", " ")
+			w = w.replace("?", " ")
+			w = w.replace("/", " ")
+			w = w.replace("\"", " ")
+			w = w.replace("["," ")
+			w = w.replace("]"," ")
+			w = w.replace("{"," ")
+			w = w.replace("}"," ")
+
+			tSet = set(w.split())
+			for term in tSet:
+				term = term.strip("'")
+				term = term.strip()
+
+				textCount = w.count(str(term))
+
+				if (textCount > 0):
+					df = {"docID" : document ["id"], "term": term, "tf": textCount}
+					my_tf.append(df)
+
+			
+			a = a.lower()
+			# a = a.replace("\n", " ")
+			a = a.replace(",", " ")
+			# a = a.replace("' ", " ")
+			# a = a.replace(" '", " ")
+			# a = a.replace("-", " ")
+			a = a.replace(".", " ")
+			a = a.replace(";", " ")
+			a = a.replace(":", " ")
+			a = a.replace("(", " ")
+			a = a.replace(")", " ")
+			a = a.replace("?", " ")
+			a = a.replace("/", " ")
+			a = a.replace("\"", " ")
+			a = a.replace("["," ")
+			a = a.replace("]"," ")
+			a = a.replace("{"," ")
+			a = a.replace("}"," ")
+
+			aSet = set(a.split())
+			for term in aSet:
+				term = term.strip("'")
+				term = term.strip()
+
+				textCount = w.count(str(term))
+
+				if (textCount > 0):
+					df = {"docID" : document ["id"], "term": term, "tf": textCount}
+					my_tf.append(df)
+			s = s.union(set(tSet))
+			s = s.union(set(aSet))
+			# print("Each set")
+			# print(tSet)
+			# print(aSet)
+	# collection.close()
+
+
+
+
+
 	
 		# nos conectamos a la base de datos
 		conn = mySQL.connect(user='root', password='root', database='textSearch')
@@ -591,8 +1015,6 @@ def parse():
 	print("Data Base Loaded")
 
 # parse()
-
-
 # ventana
 root = Tk()
 root.wm_title("LOUGLE")
@@ -625,6 +1047,8 @@ parseButt = Button(toolbar, text='Load collection', command=parse)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 parseButt = Button(toolbar, text='Clear collection', command=clearDBRecords)
 parseButt.pack(side=LEFT, padx=2, pady=2)
+parseButt = Button(toolbar, text='TEMP', command=temporal)
+parseButt.pack(side=LEFT, padx=2, pady=2)
 # printButt = Button(toolbar, text='Search in doc', command=searchInDoc)
 # printButt.pack(side=RIGHT, padx=2, pady=2)
 # searchButt = Button(toolbar, text='Search Term', command=searchTerm)
@@ -634,6 +1058,8 @@ parseButt.pack(side=LEFT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Query', command=query)
+searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='Cluster', command=cluster)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 # entryText = StringVar()
 # entry = Entry(toolbar, textvariable=entryText)
