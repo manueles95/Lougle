@@ -182,8 +182,6 @@ def cluster():
 				# print("ya llegamos al root")
 				clustermerge1 = paso1
 
-
-
 		# luego hacemos lo mismo para el segundo documento para agregarlo al cluster
 
 		c.execute("select clusterid from docs where idDoc = %s", [doc2])
@@ -210,13 +208,10 @@ def cluster():
 				# print("ya llegamos al root")
 				clustermerge2 = step1
 
-
-
-
 		if str(clustermerge1) != str(clustermerge2):
-			print("////////////////################")
-			print(clustermerge1)
-			print(clustermerge2)
+			# print("////////////////################")
+			# print(clustermerge1)
+			# print(clustermerge2)
 
 			c.execute("select clusterid from cluster")
 			numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
@@ -231,118 +226,166 @@ def cluster():
 
 			conn.commit()
 
-
-
-
 		# print(paso2)
 		c.execute("select count(*) from cluster where pid IS NULL")
 		stopNow = int(c.fetchone()[0])
 		if stopNow == 1:
 			continuar = False
 
-
 	print("Clustering Done")
-	# por ultimo juntamos los dos clusters restantes
-	# c.execute("select clusterid")
-
-		# c.execute("select clusterid from cluster")
-		# numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
-		# clustername = "clusterNumero" + str(numeroDeCluster)
-		# # print(numeroDeClusters)
-
-		# c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
-
-		# c.execute("""UPDATE cluster
-		# 				SET pid = %s 
-		# 				WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, doc1, doc2))
-
-		# conn.commit()
 
 
-		# print("[ " + str(doc1) + " ] [ " + str(doc2) + " ]")
+def clusterQuery():
 
-		# print(maxSim)
-		# print(doc1)
-		# print(doc2)
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor(buffered=True)
+
+	qtf = []
+	queryResult = []
+	documents = []
+
+	c.execute("select * from docs")
+	n = len(c.fetchall())
+
+	c.execute("delete from Query;")
+	conn.commit()
+
+	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
+	textToSearch = str(textToSearch)
+	textToSearch = textToSearch.lower()
+	textToSearch = textToSearch.replace("."," ")
+	textToSearch = textToSearch.replace(","," ")
+	textToSearch = textToSearch.replace("?"," ")
+	textToSearch = textToSearch.replace("!"," ")
+	textToSearch = textToSearch.replace("/"," ")
+	textToSearch = textToSearch.replace("-"," ")
+	textToSearch = textToSearch.replace("_"," ")
+	textToSearch = textToSearch.replace("("," ")
+	textToSearch = textToSearch.replace(")"," ")
+	textToSearch = textToSearch.replace(":"," ")
+	textToSearch = textToSearch.replace(";"," ")	
+	textToSearch = textToSearch.strip()
+
+	query = textToSearch.split()
+
+	tSet = set(query)
+
+	for term in tSet:
+		textCount = query.count(str(term))
+
+		if (textCount > 0):
+			df = {"term": term, "tf": textCount}
+			qtf.append(df)
+
+	for tf in qtf:
+		c.execute("INSERT INTO Query (term, tf) VALUES(%s,%s)", (tf["term"], tf["tf"]))
+
+	conn.commit()
+
+	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
+				from Query q, InvertedIndex i, Terms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdDoc order by 2 desc;""")
 
 
+	# selecciona el documento con mayor similitud a la query
+	# en base a ese documento tenemos que obtener todos los documentos en su sub cluster
+	# el papa de ese documento y todos los otros hijo de ese papa
+	result = c.fetchone()
 
-	# # aqui empiezo a iterar en el arbol creo que lo tengo que hacer en un while
+	if str(result) != "None":
+		clusterDoc = result[0]
 
+		# print(clusterDoc)
+		queryResult.append(clusterDoc)
 
-	# c.execute("""select clusterid
-	# 				from cluster
-	# 				where pid IS NULL """)
-
-	# result = c.fetchall()
-	# i = 0
-	# j = 0
-	# for cluster in result:
-
-	# 	papi = int(cluster[0])
-	# 	print("papi" + str(int(cluster[0])))
-
-	# 	c.execute("select count(*) from cluster where pid = %s", [papi])
-	# 	resultado = c.fetchone()
-
-	# 	if resultado[0] == 0:
-	# 		node = int(cluster[0])
-	# 		c.execute("""select idDoc
-	# 						from docs 
-	# 						where clusterid = %s""", [node])
-
-	# 		leaf = c.fetchone()
+		# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
 		
-	# 	elif resultado[0] == 1:
+		c.execute("select pid from cluster where clusterid = %s", [clusterDoc])
+		parentCluster = c.fetchone()[0]
 
+		# print(parentCluster)
 
-	# 		# print(leaf[0])
+		# aqui es donde empezamos a seleccionar a los hijos de los nodos... Recursivo? while?
+		done = False
+		while (done == False):
+			# selecciona el los clusters que estan debajo del hijo del padre
+			c.execute("select clusterid from cluster where pid = %s", [parentCluster]) #podria ser sustituida por una funcion getchildren, mas elegante
+			childCluster = c.fetchall()
+			i = 0
+			for children in childCluster:
+				child = children[0]
 
-	# 	print(resultado[0])
+				if child != clusterDoc:
 
+					# estas aqui comment en libreta
+					c.execute("select clusterid from cluster where pid = %s", [child])
+					gChildClusters = c.fetchall()
+					# print("//////////////////")
+					# print(gChildClusters)
 
-	# getHighiestSimilarity(matrix)
+					for grandchild in gChildClusters:
 
-	# guardando codigo por si la cago
-	# # Primero voy a crear el cluster combinado inicial
-	# maxSim = 0
-	# for i in range(0, n):
-	# 	for j in range(0,n):
-	# 		if i != j:
-	# 			tempSim = matrix[i][j]
-	# 			# print(matrix[i][j])
+						# si el numero de cluster es menor al de doc es por que es el cluster de ese unico doc, como la referencia a ese doc entonces solo tiene a ese doc //el numero de doc yo me entiendo
+						if grandchild[0] <= n:
+							queryResult.append(grandchild[0])
+							i = i + 1
+						else:
+							parentCluster = child
+						if i == 2:
+							done = True
 
-	# 			if tempSim > maxSim:
-	# 				maxSim = tempSim
-	# 				doc1 = i + 1
-	# 				doc2 = j + 1
+		# print(queryResult)
+		for document in queryResult:
 
-	# # print(maxSim)
-	# # print(doc1)
-	# # print(doc2)
+			c.execute("select titulo from Docs where idDoc = %s", [document])
+			doc = c.fetchall()
+			documents.append(doc[0])
 
-	# c.execute("select clusterid from cluster")
-	# numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
-	# clustername = "clusterNumero" + str(numeroDeCluster)
-	# # print(numeroDeClusters)
+		textarea.delete(1.0, END)
+		textarea.insert(END, "Resultado de la Busqueda en el cluster principal" + "\n\n")
+		count = 0
+		for rows in documents :
+			textarea.insert(END,str(rows[0]) + "\n")
+			count = count + 1
+			if (count > 50) :
+				break
 
-	# c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
+		textarea.insert(END, "\n\n" + "Todos los otros resultados de la coleccion" + "\n\n")
 
-	# c.execute("""UPDATE cluster
-	# 				SET pid = %s 
-	# 				WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, doc1, doc2))
+		allDocs = []
+		secondaryDocs = []
+		otherDocs = []
 
-	# conn.commit()
+		for i in range(0,n) :
+			allDocs.append(i+1)
 
+		# print(allDocs)
 
+		for document in allDocs:
+			if document not in queryResult:
+				secondaryDocs.append(document)
 
-def getHighiestSimilarity(matrix):
-	
-	for m in matrix:
-		print(m)
+		# print(secondaryDocs)
 
-	# while numero de clusetrs > 2;
+		for document in secondaryDocs:
 
+			c.execute("select titulo from Docs where idDoc = %s", [document])
+			doc = c.fetchall()
+			otherDocs.append(doc[0])
+
+		for rows in otherDocs :
+			textarea.insert(END,str(rows[0]) + "\n")
+			count = count + 1
+			if (count > 50) :
+				break
+
+		print("Query Done")
+
+	else:
+		textarea.delete(1.0, END)
+		textarea.insert(END, "\n\n" + "No se encontraron resultados para su Query" + "\n\n")
+		print("Query Done")
 
 
 # Funcion procesa la query ingresada por el usuario y regresa los documentos 
@@ -430,8 +473,6 @@ def query():
 	# 	count = count + 1
 	# 	if (count > 9) :
 	# 		break
-
-	
 
 
 def queryDecHi():
@@ -655,9 +696,7 @@ def parse():
 
 	s=set()
 	
-
 	# ------------------------------------------------------------------------>>>>>>>>>>>>>> puedes comentar de aqui para abajo
-
 
 	# sea abre el archivo cacm.all y se guarda en "collection"
 	collection = open('cacmmod5.all', 'r')
@@ -849,7 +888,6 @@ def parse():
 			s = s.union(set(t))
 
 
-
 		# s = sorted(s)
 		# print("my_tf")
 		# print(my_tf[0])
@@ -988,11 +1026,6 @@ def parse():
 			# print(tSet)
 			# print(aSet)
 	# collection.close()
-
-
-
-
-
 	
 		# nos conectamos a la base de datos
 		conn = mySQL.connect(user='root', password='root', database='textSearch')
@@ -1055,9 +1088,11 @@ parseButt.pack(side=LEFT, padx=2, pady=2)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
 # searchButt = Button(toolbar, text='Term DF', command=searchTermDF)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
-searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Query', command=query)
+# searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
+# searchButt = Button(toolbar, text='Query', command=query)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Cluster', command=cluster)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
@@ -1073,14 +1108,5 @@ toolbar.pack(side=TOP, fill=X)
 status = Label(root, text='Lougle', bd=1, relief=SUNKEN, anchor=W)
 status.pack(side=BOTTOM, fill=X)
 
-# # message vox
-# tkMessageBox.showinfo('Window Title', 'Monkeys can live up to 300 years.')
-
-# answer = tkMessageBox.askquestion('Question 1', 'Do you like silly faces?')
-# if answer == 'yes':
-# 	print('>:|')
-
-###
-###
 
 root.mainloop()
