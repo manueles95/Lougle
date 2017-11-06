@@ -112,11 +112,16 @@ def cluster():
 			where i.term = t.term AND j.term = t.term AND i.IdDoc = %s AND j.IdDoc = %s""", (i +1, j +1))
 
 			similarity = c.fetchone()
-			# print(int(similarity[0]))
-			matrix[i][j] = similarity[0]
+			if similarity[0] == None:
+				# print(similarity[0])
+				matrix[i][j] = 0.001
+			elif similarity[0] != None:
+				matrix[i][j] = similarity[0]
 			# print(matrix[i][j])
 		#end for
 	#end for
+
+	# print(matrix)
 
 	# Se crean los cluster iniciales con lo que se manipularan las cosas
 	# Tambien se agregan los documentos iniciales a sus clusters
@@ -130,7 +135,7 @@ def cluster():
 						SET clusterid = %s
 						where idDoc = %s;""", (j,j))
 	#End for
-	conn.commit()
+	conn.commit() #hasta aqui el programa corre bien
 	
 	# Primero voy a crear el cluster combinado inicial
 	continuar = True
@@ -142,6 +147,10 @@ def cluster():
 				if i != j:
 					tempSim = matrix[i][j]
 					# print(matrix[i][j])
+					# print(tempSim)
+
+					# if tempSim == None:
+					# 	tempSim = 0
 
 					if tempSim > maxSim:
 						maxSim = tempSim
@@ -234,6 +243,50 @@ def cluster():
 
 	print("Clustering Done")
 
+def getChildren(theParent):
+	parent = theParent
+	theChildren = []
+	finalResults = []
+
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor(buffered=True)
+
+	c.execute("select * from docs")
+	n = len(c.fetchall())
+
+	done = False
+	c.execute("select clusterid from cluster where pid = %s", [parent]) #podria ser sustituida por una funcion getchildren, mas elegante
+	childCluster = c.fetchall()
+
+	# print("cluster de la recursion")
+	# print(childCluster)
+
+	for children in childCluster:
+		child = children[0]
+		# print("PROBANDOOOOOOOOO")
+		# print(child)
+
+		if child > n:
+			theChildren.append(getChildren(child))
+			getChildren(child)
+			# print("asi es como vamos en la lista de resultados")
+			# print(theChildren)
+
+		else:
+			# print("se debe de agregar " +str(child)+ " a los resultados")
+			theChildren.append(child)
+			# print("asi es como vamos en la lista de resultados dentro del else")
+			# print(theChildren)
+	
+	# print("final children list")
+	# print(theChildren)
+	for docs in theChildren:
+		finalResults.append(docs)
+
+	# print("final Results list")
+	# print(finalResults)
+	return finalResults
+
 
 def clusterQuery():
 
@@ -243,6 +296,7 @@ def clusterQuery():
 	qtf = []
 	queryResult = []
 	documents = []
+	temporalList = []
 
 	c.execute("select * from docs")
 	n = len(c.fetchall())
@@ -292,50 +346,72 @@ def clusterQuery():
 	# en base a ese documento tenemos que obtener todos los documentos en su sub cluster
 	# el papa de ese documento y todos los otros hijo de ese papa
 	result = c.fetchone()
+	# print(result)
+
+	# print(result)
 
 	if str(result) != "None":
 		clusterDoc = result[0]
-
 		# print(clusterDoc)
-		queryResult.append(clusterDoc)
 
-		# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
+	# 	# print(clusterDoc)
+		# queryResult.append(clusterDoc)
+
+	# 	# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
 		
 		c.execute("select pid from cluster where clusterid = %s", [clusterDoc])
 		parentCluster = c.fetchone()[0]
-
 		# print(parentCluster)
+		c.execute("select pid from cluster where clusterid = %s", [parentCluster])
+		grandPapiCluster = c.fetchone()
+		# print(grandPapiCluster)
 
-		# aqui es donde empezamos a seleccionar a los hijos de los nodos... Recursivo? while?
-		done = False
-		while (done == False):
-			# selecciona el los clusters que estan debajo del hijo del padre
-			c.execute("select clusterid from cluster where pid = %s", [parentCluster]) #podria ser sustituida por una funcion getchildren, mas elegante
-			childCluster = c.fetchall()
-			i = 0
-			for children in childCluster:
-				child = children[0]
+		if str(grandPapiCluster) != "None":
 
-				if child != clusterDoc:
+			temporalList.append(getChildren(grandPapiCluster[0]))
 
-					# estas aqui comment en libreta
-					c.execute("select clusterid from cluster where pid = %s", [child])
-					gChildClusters = c.fetchall()
-					# print("//////////////////")
-					# print(gChildClusters)
+			# print("$$$$$$$$$$")
+			# print(temporalList)
 
-					for grandchild in gChildClusters:
+			listString = str(temporalList)
 
-						# si el numero de cluster es menor al de doc es por que es el cluster de ese unico doc, como la referencia a ese doc entonces solo tiene a ese doc //el numero de doc yo me entiendo
-						if grandchild[0] <= n:
-							queryResult.append(grandchild[0])
-							i = i + 1
-						else:
-							parentCluster = child
-						if i == 2:
-							done = True
+			listString = listString.replace(","," ")
+			listString = listString.replace("["," ")
+			listString = listString.replace("]"," ")
+			listString = listString.strip()
 
+			ultimoPaso = listString.split()
+			# print(listString)
+			
+			for docid in ultimoPaso:
+				queryResult.append(docid)
+
+			
+		else:
+			# aqui es donde empezamos a seleccionar a los hijos de los nodos... Recursivo? while?
+
+			temporalList.append(getChildren(parentCluster[0]))
+
+			listString = str(temporalList)
+
+			listString = listString.replace(","," ")
+			listString = listString.replace("["," ")
+			listString = listString.replace("]"," ")
+			listString = listString.strip()
+
+			ultimoPaso = listString.split()
+			# print(listString)
+			
+			for docid in ultimoPaso:
+				queryResult.append(docid)
+
+		# print("Query results")
 		# print(queryResult)
+
+
+		# for document in queryResult:
+		# 	print(document)
+
 		for document in queryResult:
 
 			c.execute("select titulo from Docs where idDoc = %s", [document])
@@ -381,6 +457,7 @@ def clusterQuery():
 				break
 
 		print("Query Done")
+		# print(queryResult)
 
 	else:
 		textarea.delete(1.0, END)
@@ -457,8 +534,8 @@ def query():
 		if (count > 9) :
 			break
 
-	c.execute("delete from Query;")
-	conn.commit()
+	# c.execute("delete from Query;")
+	# conn.commit()
 
 	print("Query Done")
 
@@ -961,7 +1038,7 @@ def parse():
 			# print(document)
 			# Se limpia el texto para poder procesar las palabras
 			w = w.lower()
-			# w = w.replace("\n", " ")
+			w = w.replace("\n", " ")
 			w = w.replace(",", " ")
 			w = w.replace("' ", " ")
 			w = w.replace(" '", " ")
@@ -979,10 +1056,15 @@ def parse():
 			w = w.replace("{"," ")
 			w = w.replace("}"," ")
 
+			# print("/////////////////////////////////////////////////////////")
+			# print(w)
+
 			tSet = set(w.split())
 			for term in tSet:
 				term = term.strip("'")
 				term = term.strip()
+				# print("/////////////////////////////////////////////////////////")
+				# print(term)
 
 				textCount = w.count(str(term))
 
@@ -1090,8 +1172,8 @@ parseButt.pack(side=LEFT, padx=2, pady=2)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
 # searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
-# searchButt = Button(toolbar, text='Query', command=query)
-# searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='Query', command=query)
+searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Cluster', command=cluster)

@@ -1,125 +1,300 @@
-.I 58
+.I 1572
 .T
-LEM-1, Small Size General Purpose Digital
-Computer Using Magnetic (Ferrite) Elements
+The Simulation of Time sharing Systems
 .W
-The paper examines some of the questions of
-development and construction of a general purpose 
-digital computer using contactless magnetic (ferrite)
-and capacitive "DEZU" (long duration capacitive 
-memory) elements, developed at the Laboratory of Electrical
-Modeling VINITYI AN SSSR, under the supervision 
-of Professor L.I. Gutenmacher.
+The development of new large scale time-sharing
+systems has raised a number of problems for
+computation center management.  Not only is it necessary
+to develop an appropriate hardware configuration
+for these systems, but appropriate software adjustments
+must be made.  Unfortunately, these systems often
+do not respond to changes in the manner that intuition
+would suggest, and there are few guides to assist
+in the analysis of performance characteristics.  The
+development of a comprehensive simulation model
+to assist in the investigation of these questions is
+described in this paper.  The resulting model has
+a general purpose design and can be used to study a
+variety of time-sharing systems.  It can also be
+used to assist in the design and development of new time-sharing
+algorithms or techniques.  For the sake
+of efficiency and greater applicability, the model was
+implemented in a limited FORTRAN subset that is
+compatible with most FORTRAN IV compilers. The use of
+the simulation is demonstrated by a study of the
+IBM 360/67 time-sharing system.
 .B
-CACM October, 1959
+CACM July, 1967
 .A
-Machmudov, U. A.
+Nielsen, N. R.
 .N
-CA591001 JB March 22, 1978  4:21 PM
+CA670701 JB February 28, 1978  9:15 AM
 .X
-215	5	58
-58	5	58
-58	5	58
-58	5	58
-58	6	58
-.I 68
+1572	5	1572
+1572	5	1572
+1572	5	1572
+1805	5	1572
+1846	5	1572
+1892	5	1572
+2188	5	1572
+2218	5	1572
+2317	5	1572
+1198	6	1572
+1380	6	1572
+1380	6	1572
+1424	6	1572
+1484	6	1572
+1518	6	1572
+1526	6	1572
+1572	6	1572
+1572	6	1572
+1572	6	1572
+1572	6	1572
+1572	6	1572
+1572	6	1572
+1693	6	1572
+1728	6	1572
+1728	6	1572
+1748	6	1572
+1749	6	1572
+1751	6	1572
+1751	6	1572
+1753	6	1572
+1752	6	1572
+1752	6	1572
+1781	6	1572
+1810	6	1572
+1879	6	1572
+2095	6	1572
+2126	6	1572
+2148	6	1572
+576	6	1572
+.I 1410
 .T
-The Role of the University in Computers,
-Data Processing and Related Fields
+Interarrival Statistics for Time Sharing Systems
 .W
-A study was made of university programs in
-the United States in the fields of computers, data 
-processing, operations research, and other closely related
-fields.  University policies, organization, 
-administration, faculties, students, researches, curricula,
-equipment, and financing were investigated. 
- An integrated university program is recommended reflecting
-the conviction that many present activities 
-related to computers will develop into disciplines and
-as such are the legitimate province of the university 
-scholar.  Details on a recommended Graduate
-School of "Computer Sciences" are given.
+The optimization of time-shared system performance
+requires the description of the stochastic
+processes governing the user inputs and the program activity.
+ This paper provides a statistical description
+of the user input process in the SDC-ARPA general-purpose
+Time-Sharing System (TSS).  The input process
+is assumed to be stationary, and to be defined by the
+interarrival time distribution.  The data obtained
+appear to justify satisfactorily the common assumption
+that the interarrival times are serially independent.
+ The data do not appear to justify, except as a very
+rough approximation, the usual assumption off an
+exponential distribution for interarrival time.  A much
+more satisfactory approximation to the data can
+be obtained with a biphase or triphase hyperexponential distribution.
 .B
-CACM September, 1959
+CACM July, 1966
 .A
-Fein, L.
+Coffman, E. G.
+Wood, R. C.
 .N
-CA590901 JB March 22, 1978  6:05 PM
+CA660704 JB March 2, 1978  9:45 PM
 .X
-1205	5	68
-68	5	68
-68	5	68
-68	5	68
-1100	6	68
-1104	6	68
-1107	6	68
-68	6	68
-.I 69
+1410	5	1410
+1410	5	1410
+1410	5	1410
+1604	5	1410
+1951	5	1410
+2373	5	1410
+1224	6	1410
+1410	6	1410
+1410	6	1410
+1410	6	1410
+1604	6	1410
+1751	6	1410
+1810	6	1410
+1951	6	1410
+2374	6	1410
+.I 1605
 .T
-Statistical Programs for the IBM 650-Part I
+An Experimental Comparison of Time Sharing and Batch Processing
 .W
-A collection is given of brief descriptions
-of statistical programs now in use in university 
-computing centers which have IBM 650's.
+The effectiveness for program development
+of the MIT Compatible Time-Sharing System (CTSS)
+was compared with that of the IBM IBSYS batch-processing
+system by means of a statistically designed
+experiment.  An identical set of four programming problems
+was assigned to each of a group of four programming
+subjects.  Influences external to the systems, such as
+the sequence of problem solution, and programmer
+and problem characteristics, were specified as design
+factors in the experiment.  Data was obtained for
+six variables (e.g., programmer time, computer time,
+elapsed time, etc.) which were considered to be
+definitive of "system effectiveness," and analysis of
+variance techniques were employed to estimate system
+differences in these variables after differences due to
+the design factors had been eliminated.  Statistical
+analysis of the experimental results provided strong
+evidence of important system differences, as well
+as a critique of the experimental design itself
+with implications for further experimentation.
 .B
-CACM August, 1959
+CACM May, 1967
 .A
-Hamblen, J. W.
+Schatzoff, M.
+Tsao, R.
+Wiig, R.
 .N
-CA590804 JB March 22, 1978  6:07 PM
+CA670501 JB February 28, 1978  11:09 AM
 .X
-69	5	69
-69	5	69
-69	5	69
-.I 70
+1605	5	1605
+1605	5	1605
+1605	5	1605
+1792	5	1605
+1908	5	1605
+1550	6	1605
+1605	6	1605
+1605	6	1605
+224	6	1605
+.I 2020
 .T
-Construction of a Set of Test Matrices
+The Allocation of Computer Resources-Is Pricing the Answer?
 .W
-This paper develops the equations and properties
-of a set of test matrices which are useful 
-in the determination of the accuracy of routines for
-finding the inverse, determinant and/or eigenvalues 
-of a matrix.
+The widespread use of complex third generation computing systems has led to a
+much broader concern about the means by which the resources of these systems
+are allocated among the user community.  One means that is suggested
+more and more frequently is a pricing procedure.  In this
+paper the manner in which one would like to allocate computing resources
+is considered, and then the extent to which a pricing mechanism fits this mold
+is discussed.  Inasmuch as pricing must serve as a rationing mechanism at
+times, consideration is given to the means by which prices can be adjusted
+flexibly in order to make a dynamic allocation of resources.  Consideration is
+also given to the means by which users can be insulated from the harmful
+effects of frequent price fluctuations.  Although the subject of pricing has
+been given a lot of attention recently, a number of misconceptions
+persist about its purpose and its operation.  An attempt is made to clarify
+some of these misunderstandings and to highlight the advantages and
+disadvantages and to highlight the advantages and disadvantages of pricing. Two
+illustrative pricing systems are also discussed in order to demonstrate the
+applicability of pricing in quite different environments.
 .B
-CACM August, 1959
+CACM August, 1970
 .A
-Aegerter, M. J.
+Nielsen, N. R.
+.K
+allocation mechanisms, charging, computer pricing,
+costing, flexible pricing, pricing, priority charges,
+resource allocation, user motivation
+.C
+1.3 2.4
 .N
-CA590803 JB March 22, 1978  6:09 PM
+CA700801 JB February 10, 1978  4:13 PM
 .X
-70	5	70
-70	5	70
-70	5	70
-.I 71
+2020	4	2020
+1735	5	2020
+2020	5	2020
+2020	5	2020
+2020	5	2020
+2479	5	2020
+2020	6	2020
+.I 2358
 .T
-Proposal for a Feasible Programming System
+The Multics Virtual Memory: Concepts and Design
 .W
-This paper proposes designing a programming
-facility (itself involving a digital computer and 
-a program) which will assist the preparation of large-scale
-real-time programs.  This facility is to 
-be capable of preparing programs for any of a variety
-of machines having characteristics similar to those 
-of the facility's computer.  One of the basic assumptions
-is that there will be enough random-access 
-storage available to avoid the necessity for segmenting
-a constructed program in any fashion other than 
-a trivial one.  While this assumption is somewhat unrealistic,
-it is intended to provide an opportunity 
-to concentrate on the other aspects of program construction.
- The programming system should stress the 
-discovery in source program statements of as many errors
-as possible, before attempting to construct 
-an object program.  Among the computer characteristics
-which are advocated are a program interrupt scheme, 
-a large set of characters, and indirect addressing.
+As experience with use of on-line operating
+systems has grown, the need to share information
+among system users has become increasingly apparent.
+ Many contemporary systems permit some degree of 
+sharing.  Usually, sharing is accomplished by allowing
+several users to share data via input and output
+of information stored in files kept in secondary storage.
+ Through the use of segmentation, however,
+Multics provides direct hardware addressing by user and
+system programs of all information, independent
+of its physical storage location.  Information is stored
+in segments each of which is potentially sharable
+and carries its own independent attributes of size and access
+privilege.  Here, the design and implementation
+considerations of segmentation and sharing in Multics
+are first discussed under the assumption that all
+information resides in large, segmented main memory.
+Since the size of main memory on contemporary systems
+is rather limited, it is then shown how the Multics
+software achieves the effect of a large segmented
+main memory through the use of the Honeywell
+645 segmentation and paging hardware.
 .B
-CACM August, 1959
+CACM May, 1972
 .A
-Bagley, P. R.
+Bensoussan, A.
+Clingen, C. T.
+Daley, R. C.
+.K
+operating system, Multics, virtual memory, segmentation,
+information sharing, paging, memory management,
+memory hierarchy
+.C
+4.30 4.31 4.32
 .N
-CA590802 JB March 22, 1978  6:16 PM
+CA720502 JB January 31, 1978  11:24 AM
 .X
-71	5	71
-71	5	71
-71	5	71
+1753	4	2358
+1754	4	2358
+1892	4	2358
+1901	4	2358
+2085	4	2358
+2095	4	2358
+2218	4	2358
+2277	4	2358
+2317	4	2358
+2319	4	2358
+2329	4	2358
+2358	4	2358
+2358	4	2358
+2358	4	2358
+2358	4	2358
+2377	4	2358
+2373	4	2358
+2372	4	2358
+2380	4	2358
+2434	4	2358
+2499	4	2358
+2501	4	2358
+2582	4	2358
+488	4	2358
+2625	4	2358
+2626	4	2358
+2669	4	2358
+2828	4	2358
+2840	4	2358
+2863	4	2358
+2881	4	2358
+2928	4	2358
+2996	4	2358
+3006	4	2358
+3067	4	2358
+274	5	2358
+1746	5	2358
+1751	5	2358
+1753	5	2358
+2358	5	2358
+2358	5	2358
+2358	5	2358
+2377	5	2358
+2625	5	2358
+2626	5	2358
+2669	5	2358
+1471	6	2358
+1471	6	2358
+1746	6	2358
+1746	6	2358
+1749	6	2358
+1751	6	2358
+1753	6	2358
+1901	6	2358
+2017	6	2358
+2358	6	2358
+2358	6	2358
+2358	6	2358
+2358	6	2358
+2377	6	2358
+2438	6	2358
+2625	6	2358
+2629	6	2358
