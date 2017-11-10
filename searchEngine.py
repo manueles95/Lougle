@@ -94,7 +94,7 @@ def cluster():
 	c.execute("DELETE FROM Cluster;")
 	conn.commit()	
 
-	c.execute("select * from docs")
+	c.execute("select * from Docs")
 
 	# esta n se va a usar cuando necesitemos que la coleccion lea un numero no determinado de documentos
 	documents = c.fetchall()
@@ -124,7 +124,7 @@ def cluster():
 		j= i+1 #para poder tener el id correcto le sumamos un 1 a la variable j
 		clustername = "clusterNumero" + str(j)
 		# print(clustername)
-		c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (j, clustername))
+		c.execute("insert into Cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (j, clustername))
 
 		c.execute("""UPDATE Docs
 						SET clusterid = %s
@@ -158,7 +158,7 @@ def cluster():
 		
 		# primero sacamos el cluster mas alto del primer doc de la matriz
 			
-		c.execute("select clusterid from docs where idDoc = %s", [doc1])
+		c.execute("select clusterid from Docs where idDoc = %s", [doc1])
 		paso1 = int(c.fetchone()[0])
 		# print(paso1)
 
@@ -166,7 +166,7 @@ def cluster():
 		root = False
 		while root == False:
 
-			c.execute("select pid from cluster where clusterid = %s", [paso1])
+			c.execute("select pid from Cluster where clusterid = %s", [paso1])
 			paso2 = c.fetchone()
 			paso2if = str(paso2)
 
@@ -184,7 +184,7 @@ def cluster():
 
 		# luego hacemos lo mismo para el segundo documento para agregarlo al cluster
 
-		c.execute("select clusterid from docs where idDoc = %s", [doc2])
+		c.execute("select clusterid from Docs where idDoc = %s", [doc2])
 		step1 = int(c.fetchone()[0])
 		# print(step1)
 
@@ -192,7 +192,7 @@ def cluster():
 		root = False
 		while root == False:
 
-			c.execute("select pid from cluster where clusterid = %s", [step1])
+			c.execute("select pid from Cluster where clusterid = %s", [step1])
 			step2 = c.fetchone()
 			step2if = str(step2)
 
@@ -213,21 +213,21 @@ def cluster():
 			# print(clustermerge1)
 			# print(clustermerge2)
 
-			c.execute("select clusterid from cluster")
+			c.execute("select clusterid from Cluster")
 			numeroDeCluster = len(c.fetchall()) + 1 # es el id del cluster nuevo que se va a crear 1 + el total de cluster que hay
 			clustername = "clusterNumero" + str(numeroDeCluster)
 			# print(numeroDeClusters)
 
-			c.execute("insert into cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
+			c.execute("insert into Cluster (clusterid, nombre, pid) values(%s, %s, NULL)", (numeroDeCluster, clustername))
 
-			c.execute("""UPDATE cluster
+			c.execute("""UPDATE Cluster
 							SET pid = %s 
 							WHERE clusterid = %s OR clusterid = %s""", (numeroDeCluster, clustermerge1, clustermerge2))
 
 			conn.commit()
 
 		# print(paso2)
-		c.execute("select count(*) from cluster where pid IS NULL")
+		c.execute("select count(*) from Cluster where pid IS NULL")
 		stopNow = int(c.fetchone()[0])
 		if stopNow == 1:
 			continuar = False
@@ -244,7 +244,7 @@ def clusterQuery():
 	queryResult = []
 	documents = []
 
-	c.execute("select * from docs")
+	c.execute("select * from Docs")
 	n = len(c.fetchall())
 
 	c.execute("delete from Query;")
@@ -301,7 +301,7 @@ def clusterQuery():
 
 		# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
 		
-		c.execute("select pid from cluster where clusterid = %s", [clusterDoc])
+		c.execute("select pid from Cluster where clusterid = %s", [clusterDoc])
 		parentCluster = c.fetchone()[0]
 
 		# print(parentCluster)
@@ -310,7 +310,7 @@ def clusterQuery():
 		done = False
 		while (done == False):
 			# selecciona el los clusters que estan debajo del hijo del padre
-			c.execute("select clusterid from cluster where pid = %s", [parentCluster]) #podria ser sustituida por una funcion getchildren, mas elegante
+			c.execute("select clusterid from Cluster where pid = %s", [parentCluster]) #podria ser sustituida por una funcion getchildren, mas elegante
 			childCluster = c.fetchall()
 			i = 0
 			for children in childCluster:
@@ -319,7 +319,7 @@ def clusterQuery():
 				if child != clusterDoc:
 
 					# estas aqui comment en libreta
-					c.execute("select clusterid from cluster where pid = %s", [child])
+					c.execute("select clusterid from Cluster where pid = %s", [child])
 					gChildClusters = c.fetchall()
 					# print("//////////////////")
 					# print(gChildClusters)
@@ -440,6 +440,7 @@ def query():
 
 	#result = c.fetchmany(size=10)
 	result = c.fetchall()
+	print(result)
 
 	documents = []
 	for docs in result:
@@ -1090,8 +1091,8 @@ parseButt.pack(side=LEFT, padx=2, pady=2)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
 # searchButt = Button(toolbar, text='Query DecHi', command=queryDecHi)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
-# searchButt = Button(toolbar, text='Query', command=query)
-# searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='Query', command=query)
+searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Cluster', command=cluster)
