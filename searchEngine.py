@@ -647,10 +647,13 @@ def webQuery():
 	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
 	count = 0
 	for rows in documents :
+		LINKS.append(str(rows[0][0]))
 		textarea.insert(END,str(rows[0][1]) + "\n")
-		textarea.insert(END,str(rows[0][0]) + "\n\n")
+		textarea.insert(END,str(rows[0][0]) + "\n\n", ('link', str(count)))
+		textarea.tag_config('link', foreground="blue")
+		textarea.tag_bind('link', '<Button-1>', showLink)
 		count = count + 1
-		if (count > 9) :
+		if (count > 29) :
 			break
 
 	# c.execute("delete from Query;")
@@ -1351,7 +1354,12 @@ def get_single_item_data(thread_url):
 	return documento
 
 
+def showLink(event):
+	idx = int(event.widget.tag_names(CURRENT)[1])
+	webbrowser.open(str(LINKS[idx]), new=2)
+	print(LINKS[idx])
 
+LINKS = []
 
 
 # parse()
