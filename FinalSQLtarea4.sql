@@ -24,7 +24,7 @@ CREATE TABLE Cluster (clusterid INT NOT NULL, nombre VARCHAR(122), pid INT, PRIM
 
 
 -- webCrawler Tables
-CREATE TABLE WebPages (idUrl VARCHAR(122) NOT NULL, url VARCHAR(255) NOT NULL, texto TEXT, PRIMARY KEY (idUrl));
+CREATE TABLE WebPages (idUrl VARCHAR(122) NOT NULL, url VARCHAR(255) NOT NULL, titulo VARCHAR(122) NOT NULL, texto TEXT, PRIMARY KEY (idUrl));
 
 CREATE TABLE WebTerms (term VARCHAR(122) NOT NULL, idf FLOAT, PRIMARY KEY (term));
 

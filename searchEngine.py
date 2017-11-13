@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import mysql.connector as mySQL
 from tkinter import *
 from tkinter import simpledialog
+import webbrowser
 import re
 
 def temporal():
@@ -638,7 +639,7 @@ def webQuery():
 	documents = []
 	for docs in result:
 
-		c.execute("select url from WebPages where idUrl = %s", [docs[0]])
+		c.execute("select url, titulo from WebPages where idUrl = %s", [docs[0]])
 		doc = c.fetchall()
 		documents.append(doc)
 	
@@ -646,14 +647,15 @@ def webQuery():
 	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
 	count = 0
 	for rows in documents :
-		textarea.insert(END,str(rows[0]) + "\n")
+		textarea.insert(END,str(rows[0][1]) + "\n")
+		textarea.insert(END,str(rows[0][0]) + "\n\n")
 		count = count + 1
 		if (count > 9) :
 			break
 
 	# c.execute("delete from Query;")
 	# conn.commit()
-
+	# webbrowser.open('http://google.com', new=2)
 	print("Query Done")
 
 
@@ -1237,7 +1239,7 @@ def parse():
 
 
 def v_spider():
-	MAX_PAGES = 3
+	MAX_PAGES = 10
 	my_docs = []
 	my_tf = []
 	tfs = []
@@ -1319,8 +1321,7 @@ def v_spider():
 	# se ingresan los valores extraidos del archivo a la base de datos
 	try:
 		for doc in my_docs:
-			c.execute("INSERT INTO WebPages (idUrl,url,texto) VALUES(%s,%s,%s)", (doc['url'], doc['url'], doc['texto']))
-			# print(doc['url'], doc['url'], doc['texto'])
+			c.execute("INSERT INTO WebPages (idUrl, url, titulo, texto) VALUES(%s,%s,%s,%s)", (doc['url'], doc['url'], doc['titulo'], doc['texto']))
 
 		for tf in my_tf:
 			c.execute("INSERT INTO WebInvertedIndex (IdUrl, Term, tf) VALUES(%s,%s,%s)", (tf["url"], tf["term"], tf["tf"]))
@@ -1337,6 +1338,7 @@ def get_single_item_data(thread_url):
 	source_code = requests.get(thread_url)
 	plain_text = source_code.text
 	soup = BeautifulSoup(plain_text, 'html.parser')
+	title = soup.h1.extract().text
 	# print(soup)
 	# count = plain_text.count('<aside')
 	# print(count)
@@ -1345,7 +1347,7 @@ def get_single_item_data(thread_url):
 	# soup.figure.extract()
 	for article in soup.findAll('div', class_='article-content post-page'):
 		# print(article)
-		documento = {'url': str(thread_url), 'texto': str(article.text)}
+		documento = {'url': str(thread_url), 'titulo':str(title), 'texto': str(article.text)}
 	return documento
 
 
@@ -1357,6 +1359,7 @@ def get_single_item_data(thread_url):
 root = Tk()
 root.wm_title("LOUGLE")
 root.minsize(width=300, height=250)
+
 
 # menu
 menu = Menu(root)
