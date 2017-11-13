@@ -1,0 +1,387 @@
+.I 24
+.T
+Libraries and Technological Forces Affecting Them
+.A
+Cuadra, C.A.
+.W
+1.  What do we mean by technology and what kind of technological forces are
+we concerned with?
+2.  Why is it important to be concerned with technology in thinking about the
+future of libraries?
+3.  What kinds of technology are particularly important for libraries?
+4.  How can this technology be applied today?
+5.  What can we foresee for the future, as we move toward the year 2000?
+6.  What, if anything, should we do tomorrow to try to get from here to here?
+.X
+13	1	24
+24	5	24
+62	1	24
+65	1	24
+66	1	24
+74	1	24
+75	3	24
+76	1	24
+78	1	24
+80	1	24
+119	1	24
+122	1	24
+137	1	24
+177	1	24
+210	1	24
+245	1	24
+278	1	24
+279	1	24
+280	1	24
+281	2	24
+336	2	24
+386	1	24
+395	1	24
+398	1	24
+658	1	24
+684	1	24
+716	1	24
+748	1	24
+782	1	24
+788	1	24
+789	1	24
+835	1	24
+837	1	24
+849	1	24
+850	1	24
+851	1	24
+852	1	24
+853	1	24
+854	1	24
+855	1	24
+907	1	24
+925	1	24
+955	1	24
+984	1	24
+1011	2	24
+1083	1	24
+1361	1	24
+1400	1	24
+1404	1	24
+1451	1	24
+1451	1	24
+.I 35
+.T
+Comparisons of Four Types of Lexical Indicators of Content
+.A
+Rath, G.J.
+Resnick, A.
+Savage, T.R.
+.W
+An experiment was conducted to determine which of
+four types of lexical indicators of content could be
+utilized best by subjects to determine relevant from
+irrelevant documents and to answer a set of 100
+questions.  The results indicate that there were no
+major differences between the groups using complete
+text and abstracts to select relevant documents, but
+the group utilizing the complete text obtained a
+significantly higher score on the examination.
+.X
+26	1	35
+29	1	35
+35	5	35
+42	2	35
+43	3	35
+52	1	35
+58	1	35
+70	2	35
+73	1	35
+81	1	35
+84	1	35
+95	1	35
+315	1	35
+420	2	35
+444	1	35
+445	1	35
+447	1	35
+449	1	35
+474	1	35
+486	1	35
+499	1	35
+532	1	35
+571	3	35
+578	1	35
+582	1	35
+589	1	35
+594	1	35
+595	1	35
+625	1	35
+655	1	35
+656	1	35
+657	2	35
+660	1	35
+664	1	35
+666	1	35
+712	1	35
+762	1	35
+764	1	35
+893	1	35
+1016	1	35
+1030	1	35
+1045	1	35
+1054	2	35
+1084	1	35
+1154	1	35
+1195	1	35
+1201	1	35
+1232	1	35
+1235	1	35
+1281	3	35
+1285	1	35
+1295	1	35
+1298	1	35
+1298	1	35
+.I 38
+.T
+Machinelike Indexing by People
+.A
+Montgomery, C.
+Swanson, D.R.
+.W
+A study of several thousand entries in a classified bibliography
+of article titles (the Index Medicus) revealed that a
+large proportion of the title entries contained words identical
+to or synonymous with words of the corresponding
+subject heading.  It is inferred that a major part of the
+bibliography studied could have been compiled by a machine
+procedure operating on titles alone, provided the
+machine was supplied with a suitable synonym dictionary.
+.X
+38	9	38
+52	2	38
+75	1	38
+84	1	38
+150	2	38
+175	1	38
+382	1	38
+429	1	38
+488	1	38
+489	1	38
+490	1	38
+491	1	38
+492	1	38
+493	1	38
+494	1	38
+495	1	38
+496	1	38
+497	1	38
+499	1	38
+500	1	38
+510	2	38
+514	1	38
+520	1	38
+565	1	38
+581	1	38
+582	3	38
+583	3	38
+584	1	38
+586	2	38
+589	2	38
+597	1	38
+603	3	38
+608	1	38
+659	1	38
+722	2	38
+726	1	38
+755	1	38
+795	1	38
+801	1	38
+813	1	38
+820	1	38
+822	1	38
+827	1	38
+830	1	38
+986	1	38
+1091	1	38
+1144	2	38
+1171	1	38
+1195	2	38
+1294	2	38
+1327	1	38
+1421	1	38
+1448	1	38
+1448	1	38
+.I 42
+.T
+The Notion of Relevance
+.A
+Hillman, Donald J.
+.W
+   Analysis of the problems of defining the mutual relevancies of queries and
+document-collections indicates that they essentially involve the problem of
+conceptual relatedness.. In order to consider the later problem, the question
+of concept-formation is first discussed, which in turn requires a definition of
+concept.. An extensional interpretation is suggested whereby a concept is
+associated with a class of conceptually-similar documents.. Users' similarity-
+judgments then provide the empirical data for formal definitions of concept and
+conceptual relatedness.. It is found, however, that certain very general
+difficulties rule out the possibility of defining concepts and their
+relatedness by the method proposed.. Since this method is based on human
+relevance-judgments, it seems a natural one to adopt, so that its collapse has
+serious practical and theoretical consequences.. An alternative approach is
+therefore proposed whose elaboration will form Part II of this article..
+.X
+3	1	42
+20	1	42
+28	1	42
+29	1	42
+35	2	42
+42	7	42
+43	2	42
+52	1	42
+58	1	42
+60	1	42
+70	2	42
+72	1	42
+73	1	42
+79	1	42
+81	1	42
+84	1	42
+85	1	42
+95	1	42
+129	1	42
+152	1	42
+172	1	42
+184	1	42
+193	1	42
+202	1	42
+420	1	42
+444	2	42
+445	1	42
+447	1	42
+449	1	42
+469	1	42
+474	1	42
+486	1	42
+532	1	42
+564	1	42
+565	1	42
+578	1	42
+582	1	42
+585	1	42
+589	1	42
+594	1	42
+595	1	42
+599	1	42
+625	1	42
+640	1	42
+652	1	42
+655	1	42
+656	1	42
+657	1	42
+660	1	42
+661	1	42
+663	1	42
+665	1	42
+714	2	42
+761	1	42
+762	3	42
+764	1	42
+803	1	42
+893	1	42
+907	1	42
+1016	1	42
+1022	1	42
+1030	1	42
+1045	2	42
+1054	1	42
+1084	1	42
+1154	1	42
+1195	1	42
+1201	1	42
+1232	1	42
+1235	1	42
+1268	1	42
+1281	2	42
+1285	1	42
+1295	1	42
+1298	1	42
+1394	1	42
+1407	1	42
+1407	1	42
+.I 43
+.T
+The Consistency of Human Judgments of Relevance
+.A
+Resnick, A.
+.A
+Savage, T.R.
+.W
+   A comparison of the ability of humans to consistently judge the relevance
+of documents to their general interests from bases of citations, abstracts,
+keywords, and total text was made under controlled experimental conditions..
+The results showed that 1) humans are able to make such judgments consistently,
+and 2) the consistency of the judgment is independent of the particular base
+from which it is made.. Apparent inconsistency arising from judgments made on the
+basis of abstracts remains unexplained.. This experiment, as well as others
+concerned with human evaluations of text material, leave unexplored the basic
+problem of providing a metric scale on which such evaluations can be measured..
+.X
+28	1	43
+29	1	43
+35	3	43
+42	2	43
+43	6	43
+47	1	43
+50	1	43
+52	1	43
+58	1	43
+65	1	43
+70	2	43
+73	1	43
+75	1	43
+81	1	43
+84	1	43
+95	1	43
+309	1	43
+328	1	43
+389	1	43
+390	1	43
+420	1	43
+444	1	43
+445	1	43
+447	1	43
+449	1	43
+474	1	43
+486	2	43
+532	1	43
+565	1	43
+571	1	43
+578	1	43
+582	1	43
+586	1	43
+589	1	43
+594	1	43
+595	1	43
+625	1	43
+655	1	43
+656	1	43
+657	1	43
+660	2	43
+661	1	43
+762	1	43
+764	1	43
+778	1	43
+791	1	43
+893	1	43
+958	1	43
+1016	1	43
+1030	1	43
+1045	1	43
+1054	1	43
+1084	1	43
+1154	1	43
+1195	1	43
+1201	1	43
+1232	1	43
+1235	1	43
+1281	3	43
+1285	1	43
+1295	1	43
+1298	1	43
+1298	1	43

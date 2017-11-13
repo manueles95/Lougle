@@ -1,3 +1,5 @@
+import requests
+from bs4 import BeautifulSoup
 import mysql.connector as mySQL
 from tkinter import *
 from tkinter import simpledialog
@@ -112,11 +114,16 @@ def cluster():
 			where i.term = t.term AND j.term = t.term AND i.IdDoc = %s AND j.IdDoc = %s""", (i +1, j +1))
 
 			similarity = c.fetchone()
-			# print(int(similarity[0]))
-			matrix[i][j] = similarity[0]
+			if similarity[0] == None:
+				# print(similarity[0])
+				matrix[i][j] = 0.001
+			elif similarity[0] != None:
+				matrix[i][j] = similarity[0]
 			# print(matrix[i][j])
 		#end for
 	#end for
+
+	# print(matrix)
 
 	# Se crean los cluster iniciales con lo que se manipularan las cosas
 	# Tambien se agregan los documentos iniciales a sus clusters
@@ -130,7 +137,7 @@ def cluster():
 						SET clusterid = %s
 						where idDoc = %s;""", (j,j))
 	#End for
-	conn.commit()
+	conn.commit() #hasta aqui el programa corre bien
 	
 	# Primero voy a crear el cluster combinado inicial
 	continuar = True
@@ -142,6 +149,10 @@ def cluster():
 				if i != j:
 					tempSim = matrix[i][j]
 					# print(matrix[i][j])
+					# print(tempSim)
+
+					# if tempSim == None:
+					# 	tempSim = 0
 
 					if tempSim > maxSim:
 						maxSim = tempSim
@@ -234,6 +245,50 @@ def cluster():
 
 	print("Clustering Done")
 
+def getChildren(theParent):
+	parent = theParent
+	theChildren = []
+	finalResults = []
+
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor(buffered=True)
+
+	c.execute("select * from docs")
+	n = len(c.fetchall())
+
+	done = False
+	c.execute("select clusterid from cluster where pid = %s", [parent]) #podria ser sustituida por una funcion getchildren, mas elegante
+	childCluster = c.fetchall()
+
+	# print("cluster de la recursion")
+	# print(childCluster)
+
+	for children in childCluster:
+		child = children[0]
+		# print("PROBANDOOOOOOOOO")
+		# print(child)
+
+		if child > n:
+			theChildren.append(getChildren(child))
+			getChildren(child)
+			# print("asi es como vamos en la lista de resultados")
+			# print(theChildren)
+
+		else:
+			# print("se debe de agregar " +str(child)+ " a los resultados")
+			theChildren.append(child)
+			# print("asi es como vamos en la lista de resultados dentro del else")
+			# print(theChildren)
+	
+	# print("final children list")
+	# print(theChildren)
+	for docs in theChildren:
+		finalResults.append(docs)
+
+	# print("final Results list")
+	# print(finalResults)
+	return finalResults
+
 
 def clusterQuery():
 
@@ -243,6 +298,7 @@ def clusterQuery():
 	qtf = []
 	queryResult = []
 	documents = []
+	temporalList = []
 
 	c.execute("select * from Docs")
 	n = len(c.fetchall())
@@ -292,19 +348,34 @@ def clusterQuery():
 	# en base a ese documento tenemos que obtener todos los documentos en su sub cluster
 	# el papa de ese documento y todos los otros hijo de ese papa
 	result = c.fetchone()
+	# print(result)
+
+	# print(result)
 
 	if str(result) != "None":
 		clusterDoc = result[0]
-
 		# print(clusterDoc)
-		queryResult.append(clusterDoc)
 
-		# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
+	# 	# print(clusterDoc)
+		# queryResult.append(clusterDoc)
+
+	# 	# selcciona al padre del docuemtnto utilizando su cluster proxy para hacerlo
 		
 		c.execute("select pid from Cluster where clusterid = %s", [clusterDoc])
 		parentCluster = c.fetchone()[0]
-
 		# print(parentCluster)
+		c.execute("select pid from cluster where clusterid = %s", [parentCluster])
+		grandPapiCluster = c.fetchone()
+		# print(grandPapiCluster)
+
+		if str(grandPapiCluster) != "None":
+
+			temporalList.append(getChildren(grandPapiCluster[0]))
+
+			# print("$$$$$$$$$$")
+			# print(temporalList)
+
+			listString = str(temporalList)
 
 		# aqui es donde empezamos a seleccionar a los hijos de los nodos... Recursivo? while?
 		done = False
@@ -335,7 +406,43 @@ def clusterQuery():
 						if i == 2:
 							done = True
 
+			listString = listString.replace(","," ")
+			listString = listString.replace("["," ")
+			listString = listString.replace("]"," ")
+			listString = listString.strip()
+
+			ultimoPaso = listString.split()
+			# print(listString)
+			
+			for docid in ultimoPaso:
+				queryResult.append(docid)
+
+			
+		else:
+			# aqui es donde empezamos a seleccionar a los hijos de los nodos... Recursivo? while?
+
+			temporalList.append(getChildren(parentCluster[0]))
+
+			listString = str(temporalList)
+
+			listString = listString.replace(","," ")
+			listString = listString.replace("["," ")
+			listString = listString.replace("]"," ")
+			listString = listString.strip()
+
+			ultimoPaso = listString.split()
+			# print(listString)
+			
+			for docid in ultimoPaso:
+				queryResult.append(docid)
+
+		# print("Query results")
 		# print(queryResult)
+
+
+		# for document in queryResult:
+		# 	print(document)
+
 		for document in queryResult:
 
 			c.execute("select titulo from Docs where idDoc = %s", [document])
@@ -381,6 +488,7 @@ def clusterQuery():
 				break
 
 		print("Query Done")
+		# print(queryResult)
 
 	else:
 		textarea.delete(1.0, END)
@@ -458,8 +566,8 @@ def query():
 		if (count > 9) :
 			break
 
-	c.execute("delete from Query;")
-	conn.commit()
+	# c.execute("delete from Query;")
+	# conn.commit()
 
 	print("Query Done")
 
@@ -474,6 +582,80 @@ def query():
 	# 	count = count + 1
 	# 	if (count > 9) :
 	# 		break
+
+
+def webQuery():
+	qtf = []
+
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	c.execute("delete from Query;")
+	conn.commit()
+
+	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
+	textToSearch = str(textToSearch)
+	textToSearch = textToSearch.lower()
+	textToSearch = textToSearch.replace("."," ")
+	textToSearch = textToSearch.replace(","," ")
+	textToSearch = textToSearch.replace("?"," ")
+	textToSearch = textToSearch.replace("!"," ")
+	textToSearch = textToSearch.replace("/"," ")
+	textToSearch = textToSearch.replace("-"," ")
+	textToSearch = textToSearch.replace("_"," ")
+	textToSearch = textToSearch.replace("("," ")
+	textToSearch = textToSearch.replace(")"," ")
+	textToSearch = textToSearch.replace(":"," ")
+	textToSearch = textToSearch.replace(";"," ")	
+	textToSearch = textToSearch.strip()
+
+	query = textToSearch.split()
+
+	tSet = set(query)
+
+	for term in tSet:
+		textCount = query.count(str(term))
+
+		if (textCount > 0):
+			df = {"term": term, "tf": textCount}
+			qtf.append(df)
+
+	for tf in qtf:
+		c.execute("INSERT INTO Query (term, tf) VALUES(%s,%s)", (tf["term"], tf["tf"]))
+
+	conn.commit()
+
+	c.execute("""select i.IdUrl, sum(q.tf * t.idf * i.tf * t.idf) 
+				from Query q, WebInvertedIndex i, WebTerms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdUrl order by 2 desc;""")
+
+
+	#result = c.fetchmany(size=10)
+	result = c.fetchall()
+	print(result)
+
+	documents = []
+	for docs in result:
+
+		c.execute("select url from WebPages where idUrl = %s", [docs[0]])
+		doc = c.fetchall()
+		documents.append(doc)
+	
+	textarea.delete(1.0, END)
+	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
+	count = 0
+	for rows in documents :
+		textarea.insert(END,str(rows[0]) + "\n")
+		count = count + 1
+		if (count > 9) :
+			break
+
+	# c.execute("delete from Query;")
+	# conn.commit()
+
+	print("Query Done")
+
 
 
 def queryDecHi():
@@ -962,7 +1144,7 @@ def parse():
 			# print(document)
 			# Se limpia el texto para poder procesar las palabras
 			w = w.lower()
-			# w = w.replace("\n", " ")
+			w = w.replace("\n", " ")
 			w = w.replace(",", " ")
 			w = w.replace("' ", " ")
 			w = w.replace(" '", " ")
@@ -980,10 +1162,15 @@ def parse():
 			w = w.replace("{"," ")
 			w = w.replace("}"," ")
 
+			# print("/////////////////////////////////////////////////////////")
+			# print(w)
+
 			tSet = set(w.split())
 			for term in tSet:
 				term = term.strip("'")
 				term = term.strip()
+				# print("/////////////////////////////////////////////////////////")
+				# print(term)
 
 				textCount = w.count(str(term))
 
@@ -1048,6 +1235,123 @@ def parse():
 
 	print("Data Base Loaded")
 
+
+def v_spider():
+	MAX_PAGES = 3
+	my_docs = []
+	my_tf = []
+	tfs = []
+	s = set()
+	page = 1
+
+	while page <= MAX_PAGES:
+		if page == 1:
+			url = 'https://arstechnica.com/gaming/'
+		else:
+			url = 'https://arstechnica.com/gaming/page/' + str(page) + '/'
+
+		source_code = requests.get(url)
+		print("got page", page)
+		plain_text = source_code.text
+		# print(plain_text)
+		soup = BeautifulSoup(plain_text, 'html.parser')
+		href_list = []
+		for _ in range(30):
+			soup.figure.extract()
+		# print(soup.prettify())
+		# print(soup.title)
+		for link in soup.findAll('a', class_='overlay'):
+			href = link.get('href')
+			title = link.string
+			# print(title)
+			if href not in href_list:
+				print(href)
+				my_docs.append(get_single_item_data(href))
+				href_list.append(href)
+			else:
+				pass
+				# print('already crawled.')
+		page += 1
+
+	for doc in my_docs:
+		texto = doc['texto']
+
+		texto = texto.lower()
+		texto = texto.replace("\n", " ")
+		texto = texto.replace(",", " ")
+		texto = texto.replace("' ", " ")
+		texto = texto.replace(" '", " ")
+		texto = texto.replace("-", " ")
+		texto = texto.replace(".", " ")
+		texto = texto.replace(";", " ")
+		texto = texto.replace(":", " ")
+		texto = texto.replace("(", " ")
+		texto = texto.replace(")", " ")
+		texto = texto.replace("?", " ")
+		texto = texto.replace("/", " ")
+		texto = texto.replace("\"", " ")
+		texto = texto.replace("["," ")
+		texto = texto.replace("]"," ")
+		texto = texto.replace("{"," ")
+		texto = texto.replace("}"," ")
+
+		tSet = set(texto.split())
+		for term in tSet:
+			term = term.strip("'")
+			term = term.strip()
+
+			textCount = texto.count(str(term))
+
+			if (textCount > 0):
+				df = {"url": doc['url'], 'term': term, 'tf': textCount}
+				my_tf.append(df)
+
+		s = s.union(set(tSet))
+		# print(s)
+		print(my_docs)
+		# print(len(my_docs))
+		# print(len(s))
+
+	# nos conectamos a la base de datos
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	# se ingresan los valores extraidos del archivo a la base de datos
+	try:
+		for doc in my_docs:
+			c.execute("INSERT INTO WebPages (idUrl,url,texto) VALUES(%s,%s,%s)", (doc['url'], doc['url'], doc['texto']))
+			# print(doc['url'], doc['url'], doc['texto'])
+
+		for tf in my_tf:
+			c.execute("INSERT INTO WebInvertedIndex (IdUrl, Term, tf) VALUES(%s,%s,%s)", (tf["url"], tf["term"], tf["tf"]))
+
+		c.execute("INSERT INTO WebTerms (SELECT Term, LOG10(3204/COUNT(*)) FROM WebInvertedIndex GROUP BY Term)")
+
+		conn.commit()
+		print("Data Base Loaded")
+	except Exception as e:
+		print ("IntegrityError")
+
+
+def get_single_item_data(thread_url):
+	source_code = requests.get(thread_url)
+	plain_text = source_code.text
+	soup = BeautifulSoup(plain_text, 'html.parser')
+	# print(soup)
+	# count = plain_text.count('<aside')
+	# print(count)
+	# for _ in range(count):
+	# 	soup.aside.extract()
+	# soup.figure.extract()
+	for article in soup.findAll('div', class_='article-content post-page'):
+		# print(article)
+		documento = {'url': str(thread_url), 'texto': str(article.text)}
+	return documento
+
+
+
+
+
 # parse()
 # ventana
 root = Tk()
@@ -1081,7 +1385,9 @@ parseButt = Button(toolbar, text='Load collection', command=parse)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 parseButt = Button(toolbar, text='Clear collection', command=clearDBRecords)
 parseButt.pack(side=LEFT, padx=2, pady=2)
-parseButt = Button(toolbar, text='TEMP', command=temporal)
+# parseButt = Button(toolbar, text='TEMP', command=temporal)
+# parseButt.pack(side=LEFT, padx=2, pady=2)
+parseButt = Button(toolbar, text='Crawl Web', command=v_spider)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 # printButt = Button(toolbar, text='Search in doc', command=searchInDoc)
 # printButt.pack(side=RIGHT, padx=2, pady=2)
@@ -1095,7 +1401,9 @@ searchButt = Button(toolbar, text='Query', command=query)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Cluster', command=cluster)
+# searchButt = Button(toolbar, text='Cluster', command=cluster)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
+searchButt = Button(toolbar, text='Web Search', command=webQuery)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
 # entryText = StringVar()
 # entry = Entry(toolbar, textvariable=entryText)

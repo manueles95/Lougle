@@ -2,6 +2,9 @@ DROP TABLE Docs;
 DROP TABLE Terms;
 DROP TABLE InvertedIndex;
 DROP TABLE Cluster
+DROP TABLE WebPages;
+DROP TABLE WebTerms;
+DROP TABLE WebInvertedIndex;
 
 CREATE TABLE Docs (idDoc INT NOT NULL, titulo VARCHAR(122), autor VARCHAR(122), abstract TEXT, clusterId INT,  PRIMARY KEY (idDoc), FOREIGN KEY (clusterid) REFERENCES Cluster(clusterid));
 
@@ -18,6 +21,14 @@ CREATE TABLE Query (term VARCHAR(122) NOT NULL, tf INT NOT NULL, PRIMARY KEY (te
 CREATE TABLE Query1 (term VARCHAR(122) NOT NULL, tf INT NOT NULL, PRIMARY KEY (term));
 
 CREATE TABLE Cluster (clusterid INT NOT NULL, nombre VARCHAR(122), pid INT, PRIMARY KEY (clusterid), FOREIGN KEY (pid) REFERENCES Cluster(clusterid));
+
+
+-- webCrawler Tables
+CREATE TABLE WebPages (idUrl VARCHAR(122) NOT NULL, url VARCHAR(255) NOT NULL, texto TEXT, PRIMARY KEY (idUrl));
+
+CREATE TABLE WebTerms (term VARCHAR(122) NOT NULL, idf FLOAT, PRIMARY KEY (term));
+
+CREATE TABLE WebInvertedIndex (idInverted INT NOT NULL AUTO_INCREMENT, IdUrl VARCHAR(122) NOT NULL, Term VARCHAR(122) NOT NULL, tf INT, PRIMARY KEY (idInverted), FOREIGN KEY (IdUrl) REFERENCES WebPages(idUrl));
 
 -- Mybe no la ocupamos, si es que podemos hacer que docs ya pertenezca a un cluster
 -- CREATE TABLE Document (id INT NOT NULL, nombre VARCHAR(122), clusterid INT, PRIMARY KEY (id), Foreign KEY (clusterid) REFERENCES Cluster(clusterid));

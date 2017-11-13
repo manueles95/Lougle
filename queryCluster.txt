@@ -1,0 +1,23 @@
+CACM query
+
+What articles exist which deal with TSS (Time Sharing System), an operating system for IBM computers?
+
+Los documentos del 1 al 5 son relevantes para esta consulta
+
+LISA query
+
+I AM INTERESTED IN COMPUTER DOCUMENTATION SYSTEMS FOR CHEMICAL PATENTS.
+I WOULD BE PLEASED TO RECEIVE INFORMATION ON EITHER PUBLICALLY AVAILABLE
+SYSTEMS OR ON IN-HOUSE SYSTEMS. CHEMISTRY, CHEMICAL, PATENTS.
+
+los documentos 6 a 10 son relevantes para esta consulta
+
+CISI query
+
+What problems and concerns are there in making up descriptive titles?
+What difficulties are involved in automatically retrieving articles from
+approximate titles?
+What is the usual relevance of the content of articles to their titles?
+
+los documentos 12 a 15 son relevantes para esta consulta
+el documento 11 no es relevante para ninguna query
