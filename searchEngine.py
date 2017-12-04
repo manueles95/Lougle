@@ -19,6 +19,9 @@ def clearDBRecords():
 	c.execute("DELETE FROM Terms;")
 	c.execute("DELETE FROM Docs;")
 	c.execute("DELETE FROM Cluster;")
+	c.execute("DELETE FROM oaiInvertedIndex")
+	c.execute("DELETE FROM oaiTerms")
+	c.execute("DELETE FROM oaiDoc;")
 	# c.execute("DELETE FROM Document;")	
 
 	conn.commit()			
@@ -585,15 +588,18 @@ def query():
 	# 		break
 
 
+#funcion para lleva a cabo la query de los documentos web
 def webQuery():
 	qtf = []
 
+	#nos conectamos a la base de datos
 	conn = mySQL.connect(user='root', password='root', database='textSearch')
 	c = conn.cursor()
 
 	c.execute("delete from Query;")
 	conn.commit()
 
+	# se limpia la query para agregarla a la base de datos
 	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
 	textToSearch = str(textToSearch)
 	textToSearch = textToSearch.lower()
@@ -635,6 +641,8 @@ def webQuery():
 	#result = c.fetchmany(size=10)
 	result = c.fetchall()
 	print(result)
+
+	#despues se imprimern los resultados
 
 	documents = []
 	for docs in result:
@@ -1241,36 +1249,231 @@ def parse():
 	print("Data Base Loaded")
 
 
+def oai_spider():
+	my_docs = []
+	my_tf = []
+	tfs = []
+	s = set()
+	i = 0
+	my_urls = ['http://ojs.uph.edu/index.php/DJM/oai?verb=ListRecords&metadataPrefix=oai_dc',
+				'http://www.worldsciencepublisher.org/journals/index.php/AITM/oai?verb=ListRecords&metadataPrefix=oai_dc',
+				'http://journals.editions-academiques.com/index.php/IJARMB/oai?verb=ListRecords&metadataPrefix=oai_dc']
+	
+	for url in my_urls:
+		source_code = requests.get(url)
+		# print ("got page", url)
+		plain_text = source_code.text
+		# print(plain_text)
+		soup = BeautifulSoup(plain_text, 'xml')
+
+		# print(soup)
+		# records = soup.findAll('record')
+		for record in soup.findAll('record'):
+			strRecord = str(record)
+			recordSoup = BeautifulSoup(strRecord, 'xml')
+
+			title = ''
+			for attribute in recordSoup.findAll('title'):
+				title = attribute.text
+
+			creator = ''
+			for attribute in recordSoup.findAll('creator'):
+				creator = attribute.text
+
+
+			description = ''
+			for attribute in recordSoup.findAll('description'):
+				description = attribute.text
+
+
+			relation = ''
+			for attribute in recordSoup.findAll('relation'):
+				relation = attribute.text
+
+			i += 1
+			# print(title,"\n", creator,"\n", description,"\n", relation,"\n")
+			# print(i)
+
+			documento = {'id': i, 'title': str(title), 'creator': str(creator), 'description': str(description), 'relation': str(relation)}
+			my_docs.append(documento)
+
+	# print(my_docs)
+	for doc in my_docs:
+		texto = doc['description']
+
+		texto = texto.lower()
+		texto = texto.replace("\n", " ")
+		texto = texto.replace(",", " ")
+		texto = texto.replace("' ", " ")
+		texto = texto.replace(" '", " ")
+		texto = texto.replace("-", " ")
+		texto = texto.replace(".", " ")
+		texto = texto.replace(";", " ")
+		texto = texto.replace(":", " ")
+		texto = texto.replace("(", " ")
+		texto = texto.replace(")", " ")
+		texto = texto.replace("?", " ")
+		texto = texto.replace("/", " ")
+		texto = texto.replace("\"", " ")
+		texto = texto.replace("["," ")
+		texto = texto.replace("]"," ")
+		texto = texto.replace("{"," ")
+		texto = texto.replace("}"," ")
+
+		tSet = set(texto.split())
+		for term in tSet:
+			term = term.strip("'")
+			term = term.strip()
+
+			textCount = texto.count(str(term))
+
+			if (textCount > 0):
+				df = {"id": doc['id'], 'term': term, 'tf': textCount}
+				my_tf.append(df)
+
+		s = s.union(set(tSet))
+	# print(s)
+	# print(my_docs)
+	# print(len(my_docs))
+	# print(len(s))
+	# print(my_docs[0:30])
+
+	# nos conectamos a la base de datos
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	# se ingresan los valores extraidos del archivo a la base de datos
+	try:
+		for doc in my_docs:
+			c.execute("INSERT INTO oaiDoc (idDoc, titulo, autor, abstract, relation) VALUES(%s,%s,%s,%s,%s)", (doc["id"], doc["title"], doc["creator"], doc["description"], doc["relation"]))
+
+		for tf in my_tf:
+			c.execute("INSERT INTO oaiInvertedIndex (IdDoc, Term, tf) VALUES(%s,%s,%s)", (tf["id"], tf["term"], tf["tf"]))
+
+		c.execute("INSERT INTO oaiTerms (SELECT Term, LOG10(3204/COUNT(*)) FROM oaiInvertedIndex GROUP BY Term)")
+	
+		conn.commit()
+	except Exception as e:
+		print ("IntegrityError")
+		print(e)
+
+	print("Data Harvested Correctly")
+
+def queryHarvest():
+
+	qtf = []
+
+	conn = mySQL.connect(user='root', password='root', database='textSearch')
+	c = conn.cursor()
+
+	c.execute("delete from oaiQuery;")
+	conn.commit()
+
+	textToSearch = simpledialog.askstring("textToSearch", "Introduce la consulta:")
+	textToSearch = str(textToSearch)
+	textToSearch = textToSearch.lower()
+	textToSearch = textToSearch.replace("."," ")
+	textToSearch = textToSearch.replace(","," ")
+	textToSearch = textToSearch.replace("?"," ")
+	textToSearch = textToSearch.replace("!"," ")
+	textToSearch = textToSearch.replace("/"," ")
+	textToSearch = textToSearch.replace("-"," ")
+	textToSearch = textToSearch.replace("_"," ")
+	textToSearch = textToSearch.replace("("," ")
+	textToSearch = textToSearch.replace(")"," ")
+	textToSearch = textToSearch.replace(":"," ")
+	textToSearch = textToSearch.replace(";"," ")	
+	textToSearch = textToSearch.strip()
+
+	query = textToSearch.split()
+
+	tSet = set(query)
+
+	for term in tSet:
+		textCount = query.count(str(term))
+
+		if (textCount > 0):
+			df = {"term": term, "tf": textCount}
+			qtf.append(df)
+
+	for tf in qtf:
+		c.execute("INSERT INTO oaiQuery (term, tf) VALUES(%s,%s)", (tf["term"], tf["tf"]))
+		print(tf)
+
+	conn.commit()
+
+	c.execute("""select i.IdDoc, sum(q.tf * t.idf * i.tf * t.idf) 
+				from oaiQuery q, oaiInvertedIndex i, oaiTerms t 
+				where q.term = t.term AND i.term = t.term 
+				group by i.IdDoc order by 2 desc;""")
+
+
+	#result = c.fetchmany(size=10)
+	result = c.fetchall()
+	print(result)
+
+	documents = []
+	for docs in result:
+
+		c.execute("select titulo, relation from oaiDoc where idDoc = %s", [docs[0]])
+		doc = c.fetchall()
+		documents.append(doc)
+
+	print(documents)
+	
+	textarea.delete(1.0, END)
+	textarea.insert(END, "Resultado de la Busqueda" + "\n\n")
+	count = 0
+	for rows in documents :
+		textarea.insert(END,str(rows[0][0]) + str(rows[0][1]) + "\n")
+		count = count + 1
+		if (count > 9) :
+			break
+
+	# c.execute("delete from Query;")
+	# conn.commit()
+
+	print("Query Done")
+
+
+# funcion de crawler para extraer los elementos de la pagina web
 def v_spider():
-	MAX_PAGES = 10
+	MAX_PAGES = 10 # numero de paginas que vamos a explorar
 	my_docs = []
 	my_tf = []
 	tfs = []
 	s = set()
 	page = 1
 
+	# loop para extrar la informacion de las paginas web
 	while page <= MAX_PAGES:
+		# como la primera pagian no tiene mas identificadores en su url no es necesario hacer nada mas para el url de la primer pagina
 		if page == 1:
 			url = 'https://arstechnica.com/gaming/'
 		else:
 			url = 'https://arstechnica.com/gaming/page/' + str(page) + '/'
-
+		# si no es la primera se altera el url para entrar a la pagina requerida
+		# utilizanod request obtenemos los elementos del url que le damos
 		source_code = requests.get(url)
 		print("got page", page)
+		# extraemos el texto de source_code, que nos regresa los elementos html con todo y sus tags
 		plain_text = source_code.text
 		# print(plain_text)
-		soup = BeautifulSoup(plain_text, 'html.parser')
-		href_list = []
-		for _ in range(30):
+		# nos genera un arbol con los elementos del DOM de cada pagina qeb que crwaleamos
+		soup = BeautifulSoup(plain_text, 'html.parser') 
+		href_list = [] # lista de links
+		for _ in range(30): #adaptar aqui el numero de articulos que queremos extraer de cada pagina
 			soup.figure.extract()
 		# print(soup.prettify())
 		# print(soup.title)
+		# encontramos todos los links de los documentos para despues agregarlos a la lista de resultados de nuestro motor de busqueda
 		for link in soup.findAll('a', class_='overlay'):
 			href = link.get('href')
 			title = link.string
 			# print(title)
 			if href not in href_list:
 				print(href)
+				# mandamos a llamar la funcion get_single_item_data para contruir la tupla que agregaremos a la base de datos
 				my_docs.append(get_single_item_data(href))
 				href_list.append(href)
 			else:
@@ -1278,6 +1481,7 @@ def v_spider():
 				# print('already crawled.')
 		page += 1
 
+	# aqui unicamente "limpiamos" el texto que se agregara a la base de datos, de igual manera que lo hicimos para los otros pareseos
 	for doc in my_docs:
 		texto = doc['texto']
 
@@ -1337,10 +1541,13 @@ def v_spider():
 		print ("IntegrityError")
 
 
+# con esta funcion obtenemos la informacion de las paginas web
 def get_single_item_data(thread_url):
+
 	source_code = requests.get(thread_url)
 	plain_text = source_code.text
 	soup = BeautifulSoup(plain_text, 'html.parser')
+	# extraemos los elementos h1 y los asignamos al titulo de nuestra tupla
 	title = soup.h1.extract().text
 	# print(soup)
 	# count = plain_text.count('<aside')
@@ -1348,12 +1555,14 @@ def get_single_item_data(thread_url):
 	# for _ in range(count):
 	# 	soup.aside.extract()
 	# soup.figure.extract()
+	# se construye la tupla documento para luego agregarce a la base de datos posteriormente
 	for article in soup.findAll('div', class_='article-content post-page'):
 		# print(article)
 		documento = {'url': str(thread_url), 'titulo':str(title), 'texto': str(article.text)}
+	# regresa la tupla de documento construida para luego agregarla a la base de datos
 	return documento
 
-
+# funcion para que los links puedan abrirse en un buscador web onClick
 def showLink(event):
 	idx = int(event.widget.tag_names(CURRENT)[1])
 	webbrowser.open(str(LINKS[idx]), new=2)
@@ -1398,7 +1607,9 @@ parseButt = Button(toolbar, text='Clear collection', command=clearDBRecords)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 # parseButt = Button(toolbar, text='TEMP', command=temporal)
 # parseButt.pack(side=LEFT, padx=2, pady=2)
-parseButt = Button(toolbar, text='Crawl Web', command=v_spider)
+# parseButt = Button(toolbar, text='Crawl Web', command=v_spider)
+# parseButt.pack(side=LEFT, padx=2, pady=2)
+parseButt = Button(toolbar, text='Harvest', command=oai_spider)
 parseButt.pack(side=LEFT, padx=2, pady=2)
 # printButt = Button(toolbar, text='Search in doc', command=searchInDoc)
 # printButt.pack(side=RIGHT, padx=2, pady=2)
@@ -1410,12 +1621,14 @@ parseButt.pack(side=LEFT, padx=2, pady=2)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
 searchButt = Button(toolbar, text='Query', command=query)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
+searchButt = Button(toolbar, text='Query Harvest', command=queryHarvest)
 searchButt.pack(side=RIGHT, padx=2, pady=2)
+# searchButt = Button(toolbar, text='QueryCluster', command=clusterQuery)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
 # searchButt = Button(toolbar, text='Cluster', command=cluster)
 # searchButt.pack(side=RIGHT, padx=2, pady=2)
-searchButt = Button(toolbar, text='Web Search', command=webQuery)
-searchButt.pack(side=RIGHT, padx=2, pady=2)
+# searchButt = Button(toolbar, text='Web Search', command=webQuery)
+# searchButt.pack(side=RIGHT, padx=2, pady=2)
 # entryText = StringVar()
 # entry = Entry(toolbar, textvariable=entryText)
 # entry.pack(side=RIGHT, padx=2)

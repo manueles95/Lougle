@@ -30,6 +30,28 @@ CREATE TABLE WebTerms (term VARCHAR(122) NOT NULL, idf FLOAT, PRIMARY KEY (term)
 
 CREATE TABLE WebInvertedIndex (idInverted INT NOT NULL AUTO_INCREMENT, IdUrl VARCHAR(122) NOT NULL, Term VARCHAR(122) NOT NULL, tf INT, PRIMARY KEY (idInverted), FOREIGN KEY (IdUrl) REFERENCES WebPages(idUrl));
 
+-- Metadata Harvest Document Table 
+
+CREATE TABLE oaiDoc (idDoc INT NOT NULL, titulo TEXT, autor VARCHAR(122), abstract TEXT, relation VARCHAR(255),  PRIMARY KEY (idDoc));
+
+ALTER TABLE textSearch.oaiDoc MODIFY COLUMN abstract TEXT
+    CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+CREATE TABLE oaiInvertedIndex (idInverted INT NOT NULL AUTO_INCREMENT, IdDoc INT NOT NULL, Term VARCHAR(122) NOT NULL, tf INT, PRIMARY KEY (idInverted), FOREIGN KEY (IdDoc) REFERENCES oaiDoc(idDoc));
+
+ALTER TABLE textSearch.oaiInvertedIndex MODIFY COLUMN term VARCHAR(122)
+	CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+CREATE TABLE oaiTerms (term VARCHAR(122) NOT NULL, idf FLOAT, PRIMARY KEY (term));
+
+ALTER TABLE textSearch.oaiTerms MODIFY COLUMN term VARCHAR(122)
+	CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+CREATE TABLE oaiQuery (term VARCHAR(122) NOT NULL, tf INT NOT NULL, PRIMARY KEY (term));
+
+ALTER TABLE textSearch.oaiQuery MODIFY COLUMN term VARCHAR(122)
+	CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 -- Mybe no la ocupamos, si es que podemos hacer que docs ya pertenezca a un cluster
 -- CREATE TABLE Document (id INT NOT NULL, nombre VARCHAR(122), clusterid INT, PRIMARY KEY (id), Foreign KEY (clusterid) REFERENCES Cluster(clusterid));
 
